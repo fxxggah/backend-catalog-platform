@@ -18,33 +18,37 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 250)
     private String name;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 250)
     private String slug;
 
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(nullable = false)
+    @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
 
+    @Column(precision = 10, scale = 2)
     private BigDecimal promotionalPrice;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id")
+    @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "store_id")
+    @JoinColumn(name = "store_id", nullable = false)
     private Store store;
 
+    @Column(nullable = false)
     private Boolean visible = true;
 
     private LocalDateTime deletedAt;
 
+    @Column(nullable = false)
     private LocalDateTime createdAt;
+
     private LocalDateTime updatedAt;
 
     private Long createdBy;
