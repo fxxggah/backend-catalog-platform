@@ -7,7 +7,12 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "stores")
+@Table(
+        name = "stores",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_store_slug", columnNames = {"slug"})
+        }
+)
 @Getter
 @Setter
 public class Store {
@@ -16,10 +21,10 @@ public class Store {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 50)
+    @Column(nullable = false, length = 100)
     private String name;
 
-    @Column(nullable = false, unique = true, length = 50)
+    @Column(nullable = false, unique = true, length = 100)
     private String slug;
 
     @Column(length = 500)
@@ -52,7 +57,7 @@ public class Store {
     @Column(length = 100)
     private String street;
 
-    @Column(length = 5)
+    @Column(length = 10)
     private String number;
 
     @Column(length = 50)
@@ -69,6 +74,7 @@ public class Store {
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
+
     private LocalDateTime updatedAt;
 
     private Long createdBy;
