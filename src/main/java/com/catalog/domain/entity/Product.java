@@ -9,7 +9,18 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "products")
+@Table(
+        name = "products",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_product_store_slug", columnNames = {"store_id", "slug"})
+        },
+        indexes = {
+                @Index(name = "idx_product_store", columnList = "store_id"),
+                @Index(name = "idx_product_category", columnList = "category_id"),
+                @Index(name = "idx_product_visible", columnList = "visible"),
+                @Index(name = "idx_product_slug", columnList = "store_id, slug")
+        }
+)
 @Getter
 @Setter
 public class Product {
