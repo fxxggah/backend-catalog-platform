@@ -7,7 +7,16 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "categories")
+@Table(
+        name = "categories",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_category_store_slug", columnNames = {"store_id", "slug"})
+        },
+        indexes = {
+                @Index(name = "idx_category_store", columnList = "store_id"),
+                @Index(name = "idx_category_slug", columnList = "store_id, slug")
+        }
+)
 @Getter
 @Setter
 public class Category {
