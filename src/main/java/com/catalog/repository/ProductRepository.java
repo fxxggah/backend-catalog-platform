@@ -10,6 +10,11 @@ import java.util.Optional;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
+
     Page<Product> findByStoreIdAndVisibleTrue(Long storeId, Pageable pageable);
+
     Optional<Product> findByStoreIdAndSlug(Long storeId, String slug);
+
+    Page<Product> findByStoreIdAndVisibleTrueAndDeletedAtIsNull(Long storeId, Pageable pageable);
+
 }
