@@ -1,5 +1,6 @@
 package com.catalog.controller.admin;
 
+import com.catalog.annotation.CurrentUser;
 import com.catalog.dto.store.StoreRequest;
 import com.catalog.dto.store.StoreResponse;
 import com.catalog.service.StoreService;
@@ -22,7 +23,7 @@ public class AdminStoreController {
     @PostMapping
     public ResponseEntity<StoreResponse> create(
             @Valid @RequestBody StoreRequest request,
-            @RequestHeader("userId") Long userId) {
+            @CurrentUser Long userId) {
 
         return ResponseEntity.status(201)
                 .body(storeService.create(request, userId));
@@ -30,7 +31,7 @@ public class AdminStoreController {
 
     @GetMapping("/my")
     public ResponseEntity<List<StoreResponse>> getUserStores(
-            @RequestHeader("userId") Long userId) {
+            @CurrentUser Long userId) {
 
         return ResponseEntity.ok(
                 storeService.getUserStores(userId)
