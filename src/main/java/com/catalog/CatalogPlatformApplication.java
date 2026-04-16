@@ -21,6 +21,8 @@ public class CatalogPlatformApplication {
 		System.setProperty("DB_USER", dotenv.get("DB_USER"));
 		System.setProperty("DB_PASSWORD", dotenv.get("DB_PASSWORD"));
 
+		System.setProperty("MY_CLIENT_ID", dotenv.get("MY_CLIENT_ID"));
+
 		SpringApplication.run(CatalogPlatformApplication.class, args);
 	}
 }
