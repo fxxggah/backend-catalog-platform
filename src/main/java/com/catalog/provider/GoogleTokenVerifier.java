@@ -5,6 +5,7 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.http.javanet.NetHttpTransport;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
@@ -12,7 +13,8 @@ import java.util.Collections;
 @Component
 public class GoogleTokenVerifier {
 
-    private final String CLIENT_ID = "SEU_GOOGLE_CLIENT_ID";
+    @Value("${google.client-id}")
+    private String clientId;
 
     public GoogleUserData verify(String token) {
 
@@ -22,7 +24,7 @@ public class GoogleTokenVerifier {
                     new NetHttpTransport(),
                     JacksonFactory.getDefaultInstance()
             )
-                    .setAudience(Collections.singletonList(CLIENT_ID))
+                    .setAudience(Collections.singletonList(clientId))
                     .build();
 
             GoogleIdToken idToken = verifier.verify(token);
@@ -34,7 +36,7 @@ public class GoogleTokenVerifier {
             GoogleIdToken.Payload payload = idToken.getPayload();
 
             return new GoogleUserData(
-                    payload.getSubject(), // googleId
+                    payload.getSubject(),
                     payload.getEmail(),
                     (String) payload.get("name")
             );
