@@ -26,14 +26,14 @@ public class StoreInviteService {
     private final StoreUserRepository storeUserRepository;
     private final AccessControlService access;
 
-    public StoreInviteResponse invite(StoreInviteRequest req, Long userId) {
+    public StoreInviteResponse invite(String storeSlug, StoreInviteRequest req, Long userId) {
 
-        access.checkOwnerAccess(userId, req.getStoreId());
+        Store store = getStoreBySlug(storeSlug);
 
-        storeUserRepository.findByUserIdAndStoreId(userId, req.getStoreId())
+        access.checkOwnerAccess(userId, store.getId());
+
+        storeUserRepository.findByUserIdAndStoreId(userId, store.getId())
                 .ifPresent(u -> { throw new RuntimeException("Esse usuario ja é admin da loja"); });
-
-        Store store = storeRepository.findById(req.getStoreId()).orElseThrow();
 
         StoreInvite invite = new StoreInvite();
         invite.setStore(store);
@@ -63,29 +63,30 @@ public class StoreInviteService {
         repo.save(invite);
     }
 
-    private StoreInviteResponse map(StoreInvite i) {
-        return StoreInviteResponse.builder()
-                .id(i.getId())
-                .email(i.getEmail())
-                .expiresAt(i.getExpiresAt())
-                .usedAt(i.getUsedAt())
-                .build();
-    }
+    public List<StoreInviteResponse> listByStore(String storeSlug, Long userId) {
 
-    public List<StoreInviteResponse> listByStore(Long storeId, Long userId) {
-        access.checkOwnerAccess(userId, storeId);
+        Store store = getStoreBySlug(storeSlug);
 
-        return repo.findByStoreIdAndUsedAtIsNull(storeId)
+        access.checkOwnerAccess(userId, store.getId());
+
+        return repo.findByStoreIdAndUsedAtIsNull(store.getId())
                 .stream()
                 .map(this::map)
                 .toList();
     }
 
-    public void cancel(Long inviteId, Long userId) {
+    public void delete(String storeSlug, Long inviteId, Long userId) {
+
+        Store store = getStoreBySlug(storeSlug);
+
         StoreInvite invite = repo.findById(inviteId)
                 .orElseThrow(() -> new RuntimeException("Convite não encontrado"));
 
-        access.checkOwnerAccess(userId, invite.getStore().getId());
+        access.checkOwnerAccess(userId, store.getId());
+
+        if (!invite.getStore().getId().equals(store.getId())) {
+            throw new RuntimeException("Convite não pertence à loja");
+        }
 
         repo.delete(invite);
     }
@@ -98,4 +99,17 @@ public class StoreInviteService {
         return map(invite);
     }
 
+    private Store getStoreBySlug(String slug) {
+        return storeRepository.findBySlug(slug)
+                .orElseThrow(() -> new RuntimeException("Loja não encontrada"));
+    }
+
+    private StoreInviteResponse map(StoreInvite i) {
+        return StoreInviteResponse.builder()
+                .id(i.getId())
+                .email(i.getEmail())
+                .expiresAt(i.getExpiresAt())
+                .usedAt(i.getUsedAt())
+                .build();
+    }
 }

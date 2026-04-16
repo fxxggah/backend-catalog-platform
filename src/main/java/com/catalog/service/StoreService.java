@@ -22,7 +22,7 @@ public class StoreService {
     private final StoreUserRepository storeUserRepository;
     private final AccessControlService access;
 
-    public StoreResponse create(StoreRequest req, User user) {
+    public StoreResponse create(StoreRequest req, Long userId) {
 
         storeRepository.findBySlug(req.getSlug())
                 .ifPresent(s -> { throw new RuntimeException("Slug já existe"); });
@@ -46,12 +46,14 @@ public class StoreService {
         store.setGoogleMapsLink(req.getGoogleMapsLink());
         store.setActive(true);
         store.setCreatedAt(LocalDateTime.now());
-        store.setCreatedBy(user.getId());
+        store.setCreatedBy(userId);
 
         store = storeRepository.save(store);
 
         StoreUser su = new StoreUser();
         su.setStore(store);
+        User user = new User();
+        user.setId(userId);
         su.setUser(user);
         su.setRole(Role.OWNER);
         su.setCreatedAt(LocalDateTime.now());
@@ -59,6 +61,76 @@ public class StoreService {
         storeUserRepository.save(su);
 
         return map(store);
+    }
+
+    public StoreResponse getBySlug(String storeSlug) {
+        Store s = storeRepository.findBySlug(storeSlug)
+                .orElseThrow(() -> new RuntimeException("Loja não encontrada"));
+
+        return map(s);
+    }
+
+    public List<StoreResponse> getUserStores(Long userId) {
+        return storeUserRepository.findByUserId(userId)
+                .stream()
+                .map(su -> map(su.getStore()))
+                .toList();
+    }
+
+    public StoreResponse update(String storeSlug, StoreRequest req, Long userId) {
+
+        Store store = getStoreBySlug(storeSlug);
+
+        access.checkOwnerAccess(userId, store.getId());
+
+        store.setName(req.getName());
+        store.setLogo(req.getLogo());
+        store.setPrimaryColor(req.getPrimaryColor());
+        store.setSecondaryColor(req.getSecondaryColor());
+        store.setTertiaryColor(req.getTertiaryColor());
+        store.setWhatsappNumber(req.getWhatsappNumber());
+        store.setInstagram(req.getInstagram());
+        store.setFacebook(req.getFacebook());
+        store.setTemplate(req.getTemplate());
+        store.setStreet(req.getStreet());
+        store.setNumber(req.getNumber());
+        store.setCity(req.getCity());
+        store.setState(req.getState());
+        store.setCountry(req.getCountry());
+        store.setGoogleMapsLink(req.getGoogleMapsLink());
+        store.setUpdatedAt(LocalDateTime.now());
+        store.setUpdatedBy(userId);
+
+        return map(storeRepository.save(store));
+    }
+
+    public void deactivate(String storeSlug, Long userId) {
+        Store store = getStoreBySlug(storeSlug);
+
+        access.checkOwnerAccess(userId, store.getId());
+
+        store.setActive(false);
+        store.setUpdatedAt(LocalDateTime.now());
+        store.setUpdatedBy(userId);
+
+        storeRepository.save(store);
+    }
+
+    public void activate(String storeSlug, Long userId) {
+        Store store = getStoreBySlug(storeSlug);
+
+        access.checkOwnerAccess(userId, store.getId());
+
+        store.setActive(true);
+        store.setUpdatedAt(LocalDateTime.now());
+        store.setUpdatedBy(userId);
+
+        storeRepository.save(store);
+    }
+
+    private Store getStoreBySlug(String storeSlug) {
+        return storeRepository.findBySlug(storeSlug)
+                .orElseThrow(() -> new RuntimeException("Loja não encontrada"));
     }
 
     private StoreResponse map(Store s) {
@@ -84,74 +156,4 @@ public class StoreService {
                 .createdAt(s.getCreatedAt())
                 .build();
     }
-
-    public StoreResponse getBySlug(String slug) {
-        Store s = storeRepository.findBySlug(slug)
-                .orElseThrow(() -> new RuntimeException("Loja não encontrada"));
-
-        return map(s);
-    }
-
-    public List<StoreResponse> getUserStores(Long userId) {
-        return storeUserRepository.findByUserId(userId)
-                .stream()
-                .map(su -> map(su.getStore()))
-                .toList();
-    }
-
-    public StoreResponse update(Long storeId, StoreRequest req, Long userId) {
-
-        Store store = storeRepository.findById(storeId)
-                .orElseThrow(() -> new RuntimeException("Loja não encontrada"));
-
-        access.checkOwnerAccess(userId, storeId);
-
-        store.setName(req.getName());
-        store.setLogo(req.getLogo());
-        store.setPrimaryColor(req.getPrimaryColor());
-        store.setSecondaryColor(req.getSecondaryColor());
-        store.setTertiaryColor(req.getTertiaryColor());
-        store.setWhatsappNumber(req.getWhatsappNumber());
-        store.setInstagram(req.getInstagram());
-        store.setFacebook(req.getFacebook());
-        store.setTemplate(req.getTemplate());
-        store.setStreet(req.getStreet());
-        store.setNumber(req.getNumber());
-        store.setCity(req.getCity());
-        store.setState(req.getState());
-        store.setCountry(req.getCountry());
-        store.setGoogleMapsLink(req.getGoogleMapsLink());
-        store.setUpdatedAt(LocalDateTime.now());
-        store.setUpdatedBy(userId);
-
-        return map(storeRepository.save(store));
-    }
-
-    public void deactivate(Long storeId, Long userId) {
-
-        Store store = storeRepository.findById(storeId)
-                .orElseThrow(() -> new RuntimeException("Loja não encontrada"));
-
-        access.checkOwnerAccess(userId, storeId);
-
-        store.setActive(false);
-        store.setUpdatedAt(LocalDateTime.now());
-        store.setUpdatedBy(userId);
-
-        storeRepository.save(store);
-    }
-
-     public void activate(Long storeId, Long userId) {
-
-        Store store = storeRepository.findById(storeId)
-                .orElseThrow(() -> new RuntimeException("Loja não encontrada"));
-
-        access.checkOwnerAccess(userId, storeId);
-
-        store.setActive(true);
-        store.setUpdatedAt(LocalDateTime.now());
-        store.setUpdatedBy(userId);
-
-        storeRepository.save(store);
-     }
 }

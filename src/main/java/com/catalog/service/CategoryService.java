@@ -20,15 +20,14 @@ public class CategoryService {
     private final StoreRepository storeRepository;
     private final AccessControlService access;
 
-    public CategoryResponse create(CategoryRequest req, Long userId) {
+    public CategoryResponse create(String storeSlug, CategoryRequest req, Long userId) {
 
-        access.checkAdminAccess(userId, req.getStoreId());
+        Store store = getStoreBySlug(storeSlug);
 
-        categoryRepository.findByStoreIdAndSlug(req.getStoreId(), req.getSlug())
+        access.checkAdminAccess(userId, store.getId());
+
+        categoryRepository.findByStoreIdAndSlug(store.getId(), req.getSlug())
                 .ifPresent(c -> { throw new RuntimeException("Slug já existe"); });
-
-        Store store = storeRepository.findById(req.getStoreId())
-                .orElseThrow(() -> new RuntimeException("Loja não encontrada"));
 
         Category c = new Category();
         c.setName(req.getName());
@@ -40,52 +39,62 @@ public class CategoryService {
         return map(categoryRepository.save(c));
     }
 
-    public void delete(Long id, Long userId, Long storeId) {
-        access.checkAdminAccess(userId, storeId);
+    public void delete(String storeSlug, Long id, Long userId) {
+
+        Store store = getStoreBySlug(storeSlug);
+
+        access.checkAdminAccess(userId, store.getId());
 
         Category c = categoryRepository.findById(id)
-                .orElseThrow();
+                .orElseThrow(() -> new RuntimeException("Categoria não encontrada"));
+
+        if (!c.getStore().getId().equals(store.getId())) {
+            throw new RuntimeException("Categoria não pertence à loja");
+        }
 
         c.setDeletedAt(LocalDateTime.now());
         categoryRepository.save(c);
     }
 
-    private CategoryResponse map(Category c) {
-        return CategoryResponse.builder()
-                .id(c.getId())
-                .name(c.getName())
-                .slug(c.getSlug())
-                .storeId(c.getStore().getId())
-                .build();
-    }
+    public List<CategoryResponse> listByStore(String storeSlug, Long userId) {
 
-    public List<CategoryResponse> listByStore(Long storeId, Long userId) {
-        access.checkAdminAccess(userId, storeId);
+        Store store = getStoreBySlug(storeSlug);
 
-        return categoryRepository.findByStoreId(storeId)
+        access.checkAdminAccess(userId, store.getId());
+
+        return categoryRepository.findByStoreId(store.getId())
                 .stream()
                 .filter(c -> c.getDeletedAt() == null)
                 .map(this::map)
                 .toList();
     }
 
-    public CategoryResponse getById(Long id, Long userId) {
-        Category c = categoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Categoria não encontrada"));
+    public List<CategoryResponse> listPublicByStore(String storeSlug) {
 
-        access.checkAdminAccess(userId, c.getStore().getId());
+        Store store = getStoreBySlug(storeSlug);
 
-        return map(c);
+        return categoryRepository.findByStoreIdAndDeletedAtIsNull(store.getId())
+                .stream()
+                .filter(c -> c.getDeletedAt() == null)
+                .map(this::map)
+                .toList();
     }
 
-    public CategoryResponse update(Long id, CategoryRequest req, Long userId) {
+    public CategoryResponse update(String storeSlug, Long id, CategoryRequest req, Long userId) {
+
+        Store store = getStoreBySlug(storeSlug);
+
         Category c = categoryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Categoria não encontrada"));
 
-        access.checkAdminAccess(userId, c.getStore().getId());
+        access.checkAdminAccess(userId, store.getId());
+
+        if (!c.getStore().getId().equals(store.getId())) {
+            throw new RuntimeException("Categoria não pertence à loja");
+        }
 
         if (!c.getSlug().equals(req.getSlug())) {
-            categoryRepository.findByStoreIdAndSlug(c.getStore().getId(), req.getSlug())
+            categoryRepository.findByStoreIdAndSlug(store.getId(), req.getSlug())
                     .ifPresent(cat -> { throw new RuntimeException("Slug já existe"); });
         }
 
@@ -97,4 +106,17 @@ public class CategoryService {
         return map(categoryRepository.save(c));
     }
 
+    private Store getStoreBySlug(String storeSlug) {
+        return storeRepository.findBySlug(storeSlug)
+                .orElseThrow(() -> new RuntimeException("Loja não encontrada"));
+    }
+
+    private CategoryResponse map(Category c) {
+        return CategoryResponse.builder()
+                .id(c.getId())
+                .name(c.getName())
+                .slug(c.getSlug())
+                .storeId(c.getStore().getId())
+                .build();
+    }
 }

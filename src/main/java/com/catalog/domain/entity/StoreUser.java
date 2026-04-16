@@ -2,6 +2,7 @@ package com.catalog.domain.entity;
 
 import com.catalog.domain.enums.Role;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
