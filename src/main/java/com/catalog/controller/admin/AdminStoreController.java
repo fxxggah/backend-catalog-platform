@@ -1,5 +1,6 @@
 package com.catalog.controller.admin;
 
+import com.catalog.auth.AuthContextService;
 import com.catalog.dto.store.StoreRequest;
 import com.catalog.dto.store.StoreResponse;
 import com.catalog.service.StoreService;
@@ -18,6 +19,7 @@ import java.util.List;
 public class AdminStoreController {
 
     private final StoreService storeService;
+    private final AuthContextService authContextService;
 
     @PostMapping
     public ResponseEntity<StoreResponse> create(
