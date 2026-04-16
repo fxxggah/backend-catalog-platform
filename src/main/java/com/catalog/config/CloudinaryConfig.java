@@ -12,9 +12,9 @@ public class CloudinaryConfig {
     @Bean
     public Cloudinary cloudinary() {
         return new Cloudinary(Map.of(
-                "cloud_name", "SEU_CLOUD_NAME",
-                "api_key", "SEU_API_KEY",
-                "api_secret", "SEU_API_SECRET"
+                "cloud_name", "dmpenlfjw",
+                "api_key", "246228352825179",
+                "api_secret", "uwf6s-uqv7mM0-hlIMpqZS-s5Ag"
         ));
     }
 }
