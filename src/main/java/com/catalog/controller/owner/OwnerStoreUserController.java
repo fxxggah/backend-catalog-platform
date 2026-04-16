@@ -1,5 +1,6 @@
 package com.catalog.controller.owner;
 
+import com.catalog.annotation.CurrentUser;
 import com.catalog.dto.storeuser.StoreUserResponse;
 import com.catalog.service.StoreUserService;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +21,7 @@ public class OwnerStoreUserController {
     @GetMapping
     public ResponseEntity<List<StoreUserResponse>> list(
             @PathVariable String storeSlug,
-            @RequestHeader("userId") Long userId) {
+            @CurrentUser Long userId) {
 
         return ResponseEntity.ok(
                 storeUserService.listByStore(storeSlug, userId)
@@ -31,7 +32,7 @@ public class OwnerStoreUserController {
     public ResponseEntity<Void> removeUser(
             @PathVariable String storeSlug,
             @PathVariable Long userIdToRemove,
-            @RequestHeader("userId") Long userId) {
+            @CurrentUser Long userId) {
 
         storeUserService.removeUser(storeSlug, userIdToRemove, userId);
         return ResponseEntity.noContent().build();
