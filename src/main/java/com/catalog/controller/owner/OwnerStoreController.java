@@ -1,6 +1,5 @@
 package com.catalog.controller.owner;
 
-import com.catalog.service.auth.AuthContextService;
 import com.catalog.dto.store.StoreRequest;
 import com.catalog.dto.store.StoreResponse;
 import com.catalog.service.StoreService;
@@ -15,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 public class OwnerStoreController {
 
     private final StoreService storeService;
-    private final AuthContextService authContextService;
 
     @PutMapping
     public ResponseEntity<StoreResponse> update(

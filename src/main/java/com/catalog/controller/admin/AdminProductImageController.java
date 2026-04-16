@@ -1,7 +1,5 @@
 package com.catalog.controller.admin;
 
-
-import com.catalog.service.auth.AuthContextService;
 import com.catalog.dto.productimage.ProductImageReorderRequest;
 import com.catalog.dto.productimage.ProductImageResponse;
 import com.catalog.dto.productimage.UploadImageRequest;
@@ -21,7 +19,6 @@ import java.util.List;
 public class AdminProductImageController {
 
     private final ProductImageService productImageService;
-    private final AuthContextService authContextService;
 
     @PostMapping
     public ResponseEntity<ProductImageResponse> upload(

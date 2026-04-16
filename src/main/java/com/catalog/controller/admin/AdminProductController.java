@@ -1,6 +1,6 @@
 package com.catalog.controller.admin;
 
-import com.catalog.service.auth.AuthContextService;
+import com.catalog.annotation.CurrentUser;
 import com.catalog.dto.product.ProductResponse;
 import com.catalog.dto.product.ProductRequest;
 import com.catalog.service.ProductService;
@@ -19,13 +19,12 @@ import org.springframework.web.bind.annotation.*;
 public class AdminProductController {
 
     private final ProductService productService;
-    private final AuthContextService authContextService;
 
     @PostMapping
     public ResponseEntity<ProductResponse> create(
             @PathVariable String storeSlug,
             @Valid @RequestBody ProductRequest request,
-            @RequestHeader("userId") Long userId) {
+            @CurrentUser Long userId) {
 
         return ResponseEntity.status(201)
                 .body(productService.create(storeSlug, request, userId));
@@ -36,7 +35,7 @@ public class AdminProductController {
             @PathVariable String storeSlug,
             @PathVariable Long id,
             @Valid @RequestBody ProductRequest request,
-            @RequestHeader("userId") Long userId) {
+            @CurrentUser Long userId) {
 
         return ResponseEntity.ok(
                 productService.update(storeSlug, id, request, userId)
@@ -47,7 +46,7 @@ public class AdminProductController {
     public ResponseEntity<Void> delete(
             @PathVariable String storeSlug,
             @PathVariable Long id,
-            @RequestHeader("userId") Long userId) {
+            @CurrentUser Long userId) {
 
         productService.delete(storeSlug, id, userId);
         return ResponseEntity.noContent().build();
@@ -58,7 +57,7 @@ public class AdminProductController {
             @PathVariable String storeSlug,
             @RequestParam(required = false) String search,
             Pageable pageable,
-            @RequestHeader("userId") Long userId) {
+            @CurrentUser Long userId) {
 
         return ResponseEntity.ok(
                 productService.list(storeSlug, search, pageable)
