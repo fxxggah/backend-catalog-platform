@@ -1,5 +1,6 @@
 package com.catalog.controller.admin;
 
+import com.catalog.auth.AuthContextService;
 import com.catalog.dto.category.CategoryResponse;
 import com.catalog.dto.category.CategoryRequest;
 import com.catalog.service.CategoryService;
@@ -18,6 +19,7 @@ import java.util.List;
 public class AdminCategoryController {
 
     private final CategoryService categoryService;
+    private final AuthContextService authContextService;
 
     @PostMapping
     public ResponseEntity<CategoryResponse> create(
