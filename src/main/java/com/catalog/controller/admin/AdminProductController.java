@@ -1,5 +1,6 @@
 package com.catalog.controller.admin;
 
+import com.catalog.auth.AuthContextService;
 import com.catalog.dto.product.ProductResponse;
 import com.catalog.dto.product.ProductRequest;
 import com.catalog.service.ProductService;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 public class AdminProductController {
 
     private final ProductService productService;
+    private final AuthContextService authContextService;
 
     @PostMapping
     public ResponseEntity<ProductResponse> create(
