@@ -1,6 +1,6 @@
 package com.catalog.controller.admin;
 
-import com.catalog.auth.AuthContextService;
+import com.catalog.service.auth.AuthContextService;
 import com.catalog.dto.store.StoreRequest;
 import com.catalog.dto.store.StoreResponse;
 import com.catalog.service.StoreService;

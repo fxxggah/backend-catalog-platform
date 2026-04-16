@@ -1,6 +1,6 @@
 package com.catalog.controller.owner;
 
-import com.catalog.auth.AuthContextService;
+import com.catalog.service.auth.AuthContextService;
 import com.catalog.dto.storeinvite.StoreInviteRequest;
 import com.catalog.dto.storeinvite.StoreInviteResponse;
 import com.catalog.service.StoreInviteService;

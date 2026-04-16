@@ -1,6 +1,6 @@
 package com.catalog.config;
 
-import com.catalog.auth.JwtAuthenticationFilter;
+import com.catalog.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

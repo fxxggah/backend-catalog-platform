@@ -1,4 +1,4 @@
-package com.catalog.auth;
+package com.catalog.service.auth;
 
 
 import org.springframework.security.core.context.SecurityContextHolder;

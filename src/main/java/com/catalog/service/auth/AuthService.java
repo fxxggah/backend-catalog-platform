@@ -1,10 +1,11 @@
-package com.catalog.auth;
+package com.catalog.service.auth;
 
 import com.catalog.domain.entity.User;
 import com.catalog.domain.enums.Provider;
 import com.catalog.dto.auth.AuthResponse;
 import com.catalog.dto.auth.GoogleUserData;
 import com.catalog.repository.UserRepository;
+import com.catalog.provider.GoogleTokenVerifier;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

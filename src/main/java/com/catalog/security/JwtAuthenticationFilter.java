@@ -1,5 +1,6 @@
-package com.catalog.auth;
+package com.catalog.security;
 
+import com.catalog.service.auth.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

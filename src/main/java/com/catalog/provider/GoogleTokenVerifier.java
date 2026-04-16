@@ -1,4 +1,4 @@
-package com.catalog.auth;
+package com.catalog.provider;
 
 import com.catalog.dto.auth.GoogleUserData;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;

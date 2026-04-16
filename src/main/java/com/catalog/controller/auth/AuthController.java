@@ -1,5 +1,6 @@
-package com.catalog.auth;
+package com.catalog.controller.auth;
 
+import com.catalog.service.auth.AuthService;
 import com.catalog.dto.auth.AuthResponse;
 import com.catalog.dto.auth.GoogleLoginRequest;
 import jakarta.validation.Valid;
