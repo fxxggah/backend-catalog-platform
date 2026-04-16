@@ -1,4 +1,4 @@
-package com.catalog.controller;
+package com.catalog.controller.open;
 
 
 import com.catalog.dto.category.CategoryResponse;
