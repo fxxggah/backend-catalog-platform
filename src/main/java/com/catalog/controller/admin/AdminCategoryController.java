@@ -1,5 +1,6 @@
 package com.catalog.controller.admin;
 
+import com.catalog.annotation.CurrentUser;
 import com.catalog.service.auth.AuthContextService;
 import com.catalog.dto.category.CategoryResponse;
 import com.catalog.dto.category.CategoryRequest;
@@ -25,7 +26,7 @@ public class AdminCategoryController {
     public ResponseEntity<CategoryResponse> create(
             @PathVariable String storeSlug,
             @Valid @RequestBody CategoryRequest request,
-            @RequestHeader("userId") Long userId) {
+            @CurrentUser Long userId) {
 
         return ResponseEntity.status(201)
                 .body(categoryService.create(storeSlug, request, userId));
@@ -34,7 +35,7 @@ public class AdminCategoryController {
     @GetMapping
     public ResponseEntity<List<CategoryResponse>> list(
             @PathVariable String storeSlug,
-            @RequestHeader("userId") Long userId) {
+            @CurrentUser Long userId) {
 
         return ResponseEntity.ok(
                 categoryService.listByStore(storeSlug, userId)
@@ -46,7 +47,7 @@ public class AdminCategoryController {
             @PathVariable String storeSlug,
             @PathVariable Long id,
             @Valid @RequestBody CategoryRequest request,
-            @RequestHeader("userId") Long userId) {
+            @CurrentUser Long userId) {
 
         return ResponseEntity.ok(
                 categoryService.update(storeSlug, id, request, userId)
@@ -57,7 +58,7 @@ public class AdminCategoryController {
     public ResponseEntity<Void> delete(
             @PathVariable String storeSlug,
             @PathVariable Long id,
-            @RequestHeader("userId") Long userId) {
+            @CurrentUser Long userId) {
 
         categoryService.delete(storeSlug, id, userId);
         return ResponseEntity.noContent().build();
