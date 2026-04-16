@@ -1,5 +1,6 @@
 package com.catalog.controller.owner;
 
+import com.catalog.auth.AuthContextService;
 import com.catalog.dto.storeinvite.StoreInviteRequest;
 import com.catalog.dto.storeinvite.StoreInviteResponse;
 import com.catalog.service.StoreInviteService;
@@ -18,6 +19,7 @@ import java.util.List;
 public class OwnerStoreInviteController {
 
     private final StoreInviteService storeInviteService;
+    private final AuthContextService authContextService;
 
     @PostMapping
     public ResponseEntity<StoreInviteResponse> invite(
