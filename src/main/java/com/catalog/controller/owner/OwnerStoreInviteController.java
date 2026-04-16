@@ -1,5 +1,6 @@
 package com.catalog.controller.owner;
 
+import com.catalog.annotation.CurrentUser;
 import com.catalog.dto.storeinvite.StoreInviteRequest;
 import com.catalog.dto.storeinvite.StoreInviteResponse;
 import com.catalog.service.StoreInviteService;
@@ -23,7 +24,7 @@ public class OwnerStoreInviteController {
     public ResponseEntity<StoreInviteResponse> invite(
             @PathVariable String storeSlug,
             @Valid @RequestBody StoreInviteRequest request,
-            @RequestHeader("userId") Long userId) {
+            @CurrentUser Long userId) {
 
         return ResponseEntity.status(201)
                 .body(storeInviteService.invite(storeSlug, request, userId));
@@ -32,7 +33,7 @@ public class OwnerStoreInviteController {
     @GetMapping
     public ResponseEntity<List<StoreInviteResponse>> list(
             @PathVariable String storeSlug,
-            @RequestHeader("userId") Long userId) {
+            @CurrentUser Long userId) {
 
         return ResponseEntity.ok(
                 storeInviteService.listByStore(storeSlug, userId)
@@ -43,7 +44,7 @@ public class OwnerStoreInviteController {
     public ResponseEntity<Void> delete(
             @PathVariable String storeSlug,
             @PathVariable Long inviteId,
-            @RequestHeader("userId") Long userId) {
+            @CurrentUser Long userId) {
 
         storeInviteService.delete(storeSlug, inviteId, userId);
         return ResponseEntity.noContent().build();
