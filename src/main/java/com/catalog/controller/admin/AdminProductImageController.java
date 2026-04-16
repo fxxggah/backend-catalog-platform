@@ -1,5 +1,6 @@
 package com.catalog.controller.admin;
 
+import com.catalog.annotation.CurrentUser;
 import com.catalog.dto.productimage.ProductImageReorderRequest;
 import com.catalog.dto.productimage.ProductImageResponse;
 import com.catalog.dto.productimage.UploadImageRequest;
@@ -25,7 +26,7 @@ public class AdminProductImageController {
             @PathVariable String storeSlug,
             @PathVariable Long productId,
             @Valid @ModelAttribute UploadImageRequest request,
-            @RequestHeader("userId") Long userId) {
+            @CurrentUser Long userId) {
 
         request.setProductId(productId);
 
@@ -47,7 +48,7 @@ public class AdminProductImageController {
     public ResponseEntity<Void> delete(
             @PathVariable String storeSlug,
             @PathVariable Long imageId,
-            @RequestHeader("userId") Long userId) {
+            @CurrentUser Long userId) {
 
         productImageService.delete(storeSlug, imageId, userId);
         return ResponseEntity.noContent().build();
@@ -57,7 +58,7 @@ public class AdminProductImageController {
     public ResponseEntity<Void> reorder(
             @PathVariable String storeSlug,
             @Valid @RequestBody ProductImageReorderRequest request,
-            @RequestHeader("userId") Long userId) {
+            @CurrentUser Long userId) {
 
         productImageService.reorder(storeSlug, request, userId);
         return ResponseEntity.noContent().build();
