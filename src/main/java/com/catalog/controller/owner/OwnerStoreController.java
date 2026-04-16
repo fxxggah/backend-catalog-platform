@@ -1,5 +1,6 @@
 package com.catalog.controller.owner;
 
+import com.catalog.annotation.CurrentUser;
 import com.catalog.dto.store.StoreRequest;
 import com.catalog.dto.store.StoreResponse;
 import com.catalog.service.StoreService;
@@ -19,7 +20,7 @@ public class OwnerStoreController {
     public ResponseEntity<StoreResponse> update(
             @PathVariable String storeSlug,
             @Valid @RequestBody StoreRequest request,
-            @RequestHeader("userId") Long userId) {
+            @CurrentUser Long userId) {
 
         return ResponseEntity.ok(
                 storeService.update(storeSlug, request, userId)
@@ -29,7 +30,7 @@ public class OwnerStoreController {
     @DeleteMapping
     public ResponseEntity<Void> deactivate(
             @PathVariable String storeSlug,
-            @RequestHeader("userId") Long userId) {
+            @CurrentUser Long userId) {
 
         storeService.deactivate(storeSlug, userId);
         return ResponseEntity.noContent().build();
