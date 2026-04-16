@@ -1,5 +1,6 @@
 package com.catalog.controller.owner;
 
+import com.catalog.auth.AuthContextService;
 import com.catalog.dto.storeuser.StoreUserResponse;
 import com.catalog.service.StoreUserService;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,7 @@ import java.util.List;
 public class OwnerStoreUserController {
 
     private final StoreUserService storeUserService;
+    private final AuthContextService authContextService;
 
     @GetMapping
     public ResponseEntity<List<StoreUserResponse>> list(
