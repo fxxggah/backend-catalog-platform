@@ -29,7 +29,7 @@ public class PublicCategoryController {
     }
 
     @GetMapping("/{categorySlug}/products")
-    public ResponseEntity<Page<ProductResponse>> getProductsByCategory(
+    public ResponseEntity<Page<ProductResponse>> listProductsByCategory(
             @PathVariable String storeSlug,
             @PathVariable String categorySlug,
             Pageable pageable) {
