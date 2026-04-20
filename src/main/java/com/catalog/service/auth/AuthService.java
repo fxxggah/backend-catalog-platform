@@ -4,6 +4,7 @@ import com.catalog.domain.entity.User;
 import com.catalog.domain.enums.Provider;
 import com.catalog.dto.auth.AuthResponse;
 import com.catalog.dto.auth.GoogleUserData;
+import com.catalog.dto.user.UserResponse;
 import com.catalog.repository.UserRepository;
 import com.catalog.provider.GoogleTokenVerifier;
 import lombok.RequiredArgsConstructor;
@@ -21,18 +22,25 @@ public class AuthService {
 
     public AuthResponse loginWithGoogle(String token) {
 
-        // 🔥 1. valida token do google
         GoogleUserData googleUser = googleTokenVerifier.verify(token);
 
-        // 🔥 2. busca usuário por email
         User user = userRepository.findByEmail(googleUser.getEmail())
                 .orElseGet(() -> createUser(googleUser));
 
-        // 🔥 3. gera JWT
         String jwt = jwtService.generateToken(user.getId());
 
         return AuthResponse.builder()
                 .token(jwt)
+                .user(
+                        UserResponse.builder()
+                                .id(user.getId())
+                                .name(user.getName())
+                                .email(user.getEmail())
+                                .provider(user.getProvider())
+                                .active(user.getActive())
+                                .createdAt(LocalDateTime.now())
+                                .build()
+                )
                 .build();
     }
 

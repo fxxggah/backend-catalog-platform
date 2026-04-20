@@ -19,25 +19,24 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                .cors(cors -> {})
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        // 🔓 Endpoints do Swagger e OpenAPI
                         .requestMatchers(
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html"
                         ).permitAll()
-
-                        // Outras permissões
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/api/v1/invites/**").permitAll()
-                        .requestMatchers("/api/v1/**").permitAll()
+                        .requestMatchers("/api/v1/stores/**").permitAll()
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(jwtFilter,
+                .addFilterBefore(
+                        jwtFilter,
                         org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class
                 );
 

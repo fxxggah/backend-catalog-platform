@@ -15,10 +15,6 @@ public class CategoryRequest {
     @Size(max = 250)
     private String name;
 
-    @NotBlank
-    @Size(max = 250)
-    private String slug;
-
     @NotNull
     private Long storeId;
 }

@@ -20,5 +20,9 @@ cloudinary:
   api-key: ${CLOUDINARY_API_KEY}
   api-secret: ${CLOUDINARY_API_SECRET}
 
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 86400000
+
 google:
   client-id: ${MY_CLIENT_ID}

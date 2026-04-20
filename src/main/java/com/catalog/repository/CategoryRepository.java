@@ -18,4 +18,6 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
 
     Optional<Category> findByStoreIdAndSlugAndDeletedAtIsNull(Long storeId, String slug);
 
+    boolean existsByStoreIdAndSlug(Long storeId, String slug);
+
 }

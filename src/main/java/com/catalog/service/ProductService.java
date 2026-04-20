@@ -4,6 +4,7 @@ import com.catalog.domain.entity.Product;
 import com.catalog.dto.product.ProductRequest;
 import com.catalog.dto.product.ProductResponse;
 import com.catalog.repository.ProductRepository;
+import com.catalog.util.SlugUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -15,6 +16,7 @@ import com.catalog.repository.StoreRepository;
 import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -36,25 +38,28 @@ public class ProductService {
             throw new RuntimeException("Preço promocional inválido");
         }
 
-        productRepository.findByStoreIdAndSlug(store.getId(), req.getSlug())
-                .ifPresent(p -> { throw new RuntimeException("Slug já existe"); });
-
         Category category = categoryRepository.findById(req.getCategoryId())
                 .orElseThrow(() -> new RuntimeException("Categoria não encontrada"));
 
-        Product p = new Product();
-        p.setName(req.getName());
-        p.setSlug(req.getSlug());
-        p.setDescription(req.getDescription());
-        p.setPrice(req.getPrice());
-        p.setPromotionalPrice(req.getPromotionalPrice());
-        p.setCategory(category);
-        p.setStore(store);
-        p.setVisible(req.getVisible() != null ? req.getVisible() : true);
-        p.setCreatedAt(LocalDateTime.now());
-        p.setCreatedBy(userId);
+        if (!category.getStore().getId().equals(store.getId())) {
+            throw new RuntimeException("Categoria não pertence à loja");
+        }
 
-        return map(productRepository.save(p));
+        String generatedSlug = generateUniqueProductSlug(store.getId(), req.getName());
+
+        Product product = new Product();
+        product.setName(req.getName());
+        product.setSlug(generatedSlug);
+        product.setDescription(req.getDescription());
+        product.setPrice(req.getPrice());
+        product.setPromotionalPrice(req.getPromotionalPrice());
+        product.setCategory(category);
+        product.setStore(store);
+        product.setVisible(req.getVisible() != null ? req.getVisible() : true);
+        product.setCreatedAt(LocalDateTime.now());
+        product.setCreatedBy(userId);
+
+        return map(productRepository.save(product));
     }
 
     public Page<ProductResponse> list(String storeSlug, String search, Pageable pageable) {
@@ -94,23 +99,6 @@ public class ProductService {
         return page.map(this::map);
     }
 
-    public void delete(String storeSlug, Long id, Long userId) {
-
-        Store store = getStoreBySlug(storeSlug);
-
-        access.checkAdminAccess(userId, store.getId());
-
-        Product p = productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
-
-        if (!p.getStore().getId().equals(store.getId())) {
-            throw new RuntimeException("Produto não pertence à loja");
-        }
-
-        p.setDeletedAt(LocalDateTime.now());
-        productRepository.save(p);
-    }
-
     public ProductResponse getBySlug(String storeSlug, String productSlug) {
 
         Store store = getStoreBySlug(storeSlug);
@@ -130,12 +118,12 @@ public class ProductService {
 
         Store store = getStoreBySlug(storeSlug);
 
-        Product p = productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
-
         access.checkAdminAccess(userId, store.getId());
 
-        if (!p.getStore().getId().equals(store.getId())) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+
+        if (!product.getStore().getId().equals(store.getId())) {
             throw new RuntimeException("Produto não pertence à loja");
         }
 
@@ -144,25 +132,78 @@ public class ProductService {
             throw new RuntimeException("Preço promocional inválido");
         }
 
-        if (!p.getSlug().equals(req.getSlug())) {
-            productRepository.findByStoreIdAndSlug(store.getId(), req.getSlug())
-                    .ifPresent(prod -> { throw new RuntimeException("Slug já existe"); });
-        }
-
         Category category = categoryRepository.findById(req.getCategoryId())
                 .orElseThrow(() -> new RuntimeException("Categoria não encontrada"));
 
-        p.setName(req.getName());
-        p.setSlug(req.getSlug());
-        p.setDescription(req.getDescription());
-        p.setPrice(req.getPrice());
-        p.setPromotionalPrice(req.getPromotionalPrice());
-        p.setCategory(category);
-        p.setVisible(req.getVisible());
-        p.setUpdatedAt(LocalDateTime.now());
-        p.setUpdatedBy(userId);
+        if (!category.getStore().getId().equals(store.getId())) {
+            throw new RuntimeException("Categoria não pertence à loja");
+        }
 
-        return map(productRepository.save(p));
+        product.setName(req.getName());
+
+        String generatedSlug = generateUniqueProductSlugForUpdate(
+                store.getId(),
+                req.getName(),
+                product.getId()
+        );
+
+        product.setSlug(generatedSlug);
+        product.setDescription(req.getDescription());
+        product.setPrice(req.getPrice());
+        product.setPromotionalPrice(req.getPromotionalPrice());
+        product.setCategory(category);
+        product.setVisible(req.getVisible() != null ? req.getVisible() : true);
+        product.setUpdatedAt(LocalDateTime.now());
+        product.setUpdatedBy(userId);
+
+        return map(productRepository.save(product));
+    }
+
+    public void delete(String storeSlug, Long id, Long userId) {
+
+        Store store = getStoreBySlug(storeSlug);
+
+        access.checkAdminAccess(userId, store.getId());
+
+        Product p = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+
+        if (!p.getStore().getId().equals(store.getId())) {
+            throw new RuntimeException("Produto não pertence à loja");
+        }
+
+        p.setDeletedAt(LocalDateTime.now());
+        productRepository.save(p);
+    }
+
+    private String generateUniqueProductSlug(Long storeId, String name) {
+        String baseSlug = SlugUtils.toSlug(name);
+        String slug = baseSlug;
+        int counter = 2;
+
+        while (productRepository.existsByStoreIdAndSlug(storeId, slug)) {
+            slug = baseSlug + "-" + counter;
+            counter++;
+        }
+
+        return slug;
+    }
+
+    private String generateUniqueProductSlugForUpdate(Long storeId, String name, Long currentProductId) {
+        String baseSlug = SlugUtils.toSlug(name);
+        String slug = baseSlug;
+        int counter = 2;
+
+        while (true) {
+            Optional<Product> existing = productRepository.findByStoreIdAndSlug(storeId, slug);
+
+            if (existing.isEmpty() || existing.get().getId().equals(currentProductId)) {
+                return slug;
+            }
+
+            slug = baseSlug + "-" + counter;
+            counter++;
+        }
     }
 
     private Store getStoreBySlug(String slug) {

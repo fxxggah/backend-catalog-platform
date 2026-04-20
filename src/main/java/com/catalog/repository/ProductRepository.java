@@ -25,4 +25,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     Page<Product> findByStoreIdAndNameContainingIgnoreCaseAndDeletedAtIsNull(Long storeId, String name, Pageable pageable);
 
+    boolean existsByStoreIdAndSlug(Long storeId, String slug);
+
 }

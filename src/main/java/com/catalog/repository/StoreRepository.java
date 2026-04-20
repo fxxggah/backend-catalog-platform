@@ -16,4 +16,6 @@ public interface StoreRepository extends JpaRepository<Store, Long> {
 
     List<Store> findByActiveTrue();
 
+    boolean existsBySlug(String slug);
+
 }

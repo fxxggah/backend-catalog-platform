@@ -15,10 +15,6 @@ public class ProductRequest {
     @Size(max = 250)
     private String name;
 
-    @NotBlank
-    @Size(max = 250)
-    private String slug;
-
     private String description;
 
     @NotNull
@@ -30,9 +26,6 @@ public class ProductRequest {
 
     @NotNull
     private Long categoryId;
-
-    @NotNull
-    private Long storeId;
 
     private Boolean visible;
 }

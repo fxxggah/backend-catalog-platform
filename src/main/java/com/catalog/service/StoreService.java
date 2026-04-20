@@ -8,6 +8,7 @@ import com.catalog.dto.store.StoreRequest;
 import com.catalog.dto.store.StoreResponse;
 import com.catalog.repository.StoreRepository;
 import com.catalog.repository.StoreUserRepository;
+import com.catalog.util.SlugUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -23,13 +24,11 @@ public class StoreService {
     private final AccessControlService access;
 
     public StoreResponse create(StoreRequest req, Long userId) {
-
-        storeRepository.findBySlug(req.getSlug())
-                .ifPresent(s -> { throw new RuntimeException("Slug já existe"); });
+        String generatedSlug = generateUniqueStoreSlug(req.getName());
 
         Store store = new Store();
         store.setName(req.getName());
-        store.setSlug(req.getSlug());
+        store.setSlug(generatedSlug);
         store.setLogo(req.getLogo());
         store.setPrimaryColor(req.getPrimaryColor());
         store.setSecondaryColor(req.getSecondaryColor());
@@ -131,6 +130,19 @@ public class StoreService {
     private Store getStoreBySlug(String storeSlug) {
         return storeRepository.findBySlug(storeSlug)
                 .orElseThrow(() -> new RuntimeException("Loja não encontrada"));
+    }
+
+    private String generateUniqueStoreSlug(String name) {
+        String baseSlug = SlugUtils.toSlug(name);
+        String slug = baseSlug;
+        int counter = 2;
+
+        while (storeRepository.existsBySlug(slug)) {
+            slug = baseSlug + "-" + counter;
+            counter++;
+        }
+
+        return slug;
     }
 
     private StoreResponse map(Store s) {

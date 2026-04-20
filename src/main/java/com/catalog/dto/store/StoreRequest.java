@@ -14,10 +14,6 @@ public class StoreRequest {
     @Size(max = 100)
     private String name;
 
-    @NotBlank
-    @Size(max = 100)
-    private String slug;
-
     private String logo;
 
     private String primaryColor;
