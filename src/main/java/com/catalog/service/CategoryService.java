@@ -23,54 +23,49 @@ public class CategoryService {
     private final AccessControlService access;
 
     public CategoryResponse create(String storeSlug, CategoryRequest req, Long userId) {
-
         Store store = getStoreBySlug(storeSlug);
 
         access.checkAdminAccess(userId, store.getId());
 
         String generatedSlug = generateUniqueCategorySlug(store.getId(), req.getName());
 
-        Category c = new Category();
-        c.setName(req.getName());
-        c.setSlug(generatedSlug);
-        c.setStore(store);
-        c.setCreatedAt(LocalDateTime.now());
-        c.setCreatedBy(userId);
+        Category category = new Category();
+        category.setName(req.getName());
+        category.setSlug(generatedSlug);
+        category.setStore(store);
+        category.setCreatedAt(LocalDateTime.now());
+        category.setCreatedBy(userId);
 
-        return map(categoryRepository.save(c));
+        return map(categoryRepository.save(category));
     }
 
     public List<CategoryResponse> listByStore(String storeSlug, Long userId) {
-
         Store store = getStoreBySlug(storeSlug);
 
         access.checkAdminAccess(userId, store.getId());
 
-        return categoryRepository.findByStoreId(store.getId())
+        return categoryRepository.findByStoreIdAndDeletedAtIsNull(store.getId())
                 .stream()
-                .filter(c -> c.getDeletedAt() == null)
                 .map(this::map)
                 .toList();
     }
 
     public List<CategoryResponse> listPublicByStore(String storeSlug) {
-
         Store store = getStoreBySlug(storeSlug);
 
         return categoryRepository.findByStoreIdAndDeletedAtIsNull(store.getId())
                 .stream()
-                .filter(c -> c.getDeletedAt() == null)
                 .map(this::map)
                 .toList();
     }
 
     public CategoryResponse update(String storeSlug, Long id, CategoryRequest req, Long userId) {
-
         Store store = getStoreBySlug(storeSlug);
 
         access.checkAdminAccess(userId, store.getId());
 
         Category category = categoryRepository.findById(id)
+                .filter(c -> c.getDeletedAt() == null)
                 .orElseThrow(() -> new RuntimeException("Categoria não encontrada"));
 
         if (!category.getStore().getId().equals(store.getId())) {
@@ -93,20 +88,36 @@ public class CategoryService {
     }
 
     public void delete(String storeSlug, Long id, Long userId) {
-
         Store store = getStoreBySlug(storeSlug);
 
         access.checkAdminAccess(userId, store.getId());
 
-        Category c = categoryRepository.findById(id)
+        Category category = categoryRepository.findById(id)
+                .filter(c -> c.getDeletedAt() == null)
                 .orElseThrow(() -> new RuntimeException("Categoria não encontrada"));
 
-        if (!c.getStore().getId().equals(store.getId())) {
+        if (!category.getStore().getId().equals(store.getId())) {
             throw new RuntimeException("Categoria não pertence à loja");
         }
 
-        c.setDeletedAt(LocalDateTime.now());
-        categoryRepository.save(c);
+        category.setDeletedAt(LocalDateTime.now());
+        category.setUpdatedAt(LocalDateTime.now());
+        category.setUpdatedBy(userId);
+
+        categoryRepository.save(category);
+    }
+
+    private String generateUniqueCategorySlug(Long storeId, String name) {
+        String baseSlug = SlugUtils.toSlug(name);
+        String slug = baseSlug;
+        int counter = 2;
+
+        while (categoryRepository.existsByStoreIdAndSlug(storeId, slug)) {
+            slug = baseSlug + "-" + counter;
+            counter++;
+        }
+
+        return slug;
     }
 
     private String generateUniqueCategorySlugForUpdate(Long storeId, String name, Long currentCategoryId) {
@@ -126,30 +137,17 @@ public class CategoryService {
         }
     }
 
-    private String generateUniqueCategorySlug(Long storeId, String name) {
-        String baseSlug = SlugUtils.toSlug(name);
-        String slug = baseSlug;
-        int counter = 2;
-
-        while (categoryRepository.existsByStoreIdAndSlug(storeId, slug)) {
-            slug = baseSlug + "-" + counter;
-            counter++;
-        }
-
-        return slug;
-    }
-
     private Store getStoreBySlug(String storeSlug) {
         return storeRepository.findBySlug(storeSlug)
                 .orElseThrow(() -> new RuntimeException("Loja não encontrada"));
     }
 
-    private CategoryResponse map(Category c) {
+    private CategoryResponse map(Category category) {
         return CategoryResponse.builder()
-                .id(c.getId())
-                .name(c.getName())
-                .slug(c.getSlug())
-                .storeId(c.getStore().getId())
+                .id(category.getId())
+                .name(category.getName())
+                .slug(category.getSlug())
+                .storeId(category.getStore().getId())
                 .build();
     }
 }

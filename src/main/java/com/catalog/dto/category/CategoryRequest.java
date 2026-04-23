@@ -1,7 +1,6 @@
 package com.catalog.dto.category;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
@@ -15,6 +14,4 @@ public class CategoryRequest {
     @Size(max = 250)
     private String name;
 
-    @NotNull
-    private Long storeId;
 }
