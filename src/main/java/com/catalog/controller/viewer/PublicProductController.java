@@ -22,7 +22,7 @@ public class PublicProductController {
             Pageable pageable) {
 
         return ResponseEntity.ok(
-                productService.list(storeSlug, search, pageable)
+                productService.listPublic(storeSlug, search, pageable)
         );
     }
 
