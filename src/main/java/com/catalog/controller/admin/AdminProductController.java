@@ -52,6 +52,17 @@ public class AdminProductController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<ProductResponse> getById(
+            @PathVariable String storeSlug,
+            @PathVariable Long id,
+            @CurrentUser Long userId) {
+
+        return ResponseEntity.ok(
+                productService.getById(storeSlug, id, userId)
+        );
+    }
+
     @GetMapping
     public ResponseEntity<Page<ProductResponse>> list(
             @PathVariable String storeSlug,

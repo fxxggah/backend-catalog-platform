@@ -2,9 +2,11 @@ package com.catalog.service;
 
 import com.catalog.domain.entity.Category;
 import com.catalog.domain.entity.Product;
+import com.catalog.domain.entity.ProductImage;
 import com.catalog.domain.entity.Store;
 import com.catalog.dto.product.ProductRequest;
 import com.catalog.dto.product.ProductResponse;
+import com.catalog.dto.productimage.ProductImageResponse;
 import com.catalog.repository.CategoryRepository;
 import com.catalog.repository.ProductRepository;
 import com.catalog.repository.StoreRepository;
@@ -15,6 +17,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -122,6 +126,22 @@ public class ProductService {
 
         if (!product.getVisible()) {
             throw new RuntimeException("Produto não disponível");
+        }
+
+        return map(product);
+    }
+
+    public ProductResponse getById(String storeSlug, Long id, Long userId) {
+        Store store = getStoreBySlug(storeSlug);
+
+        access.checkAdminAccess(userId, store.getId());
+
+        Product product = productRepository.findById(id)
+                .filter(p -> p.getDeletedAt() == null)
+                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+
+        if (!product.getStore().getId().equals(store.getId())) {
+            throw new RuntimeException("Produto não pertence à loja");
         }
 
         return map(product);
@@ -243,6 +263,18 @@ public class ProductService {
                 .visible(product.getVisible())
                 .createdAt(product.getCreatedAt())
                 .categoryId(product.getCategory().getId())
+                .images(
+                        product.getImages() == null
+                                ? List.of()
+                                : product.getImages().stream()
+                                .sorted(Comparator.comparing(ProductImage::getPosition))
+                                .map(img -> ProductImageResponse.builder()
+                                        .id(img.getId())
+                                        .imageUrl(img.getImageUrl())
+                                        .position(img.getPosition())
+                                        .build())
+                                .toList()
+                )
                 .build();
     }
 }
