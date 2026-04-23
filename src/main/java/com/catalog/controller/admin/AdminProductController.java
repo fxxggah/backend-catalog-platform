@@ -1,8 +1,8 @@
 package com.catalog.controller.admin;
 
 import com.catalog.annotation.CurrentUser;
-import com.catalog.dto.product.ProductResponse;
 import com.catalog.dto.product.ProductRequest;
+import com.catalog.dto.product.ProductResponse;
 import com.catalog.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -60,7 +60,7 @@ public class AdminProductController {
             @CurrentUser Long userId) {
 
         return ResponseEntity.ok(
-                productService.list(storeSlug, search, pageable)
+                productService.listAdmin(storeSlug, search, pageable, userId)
         );
     }
 }

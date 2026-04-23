@@ -1,19 +1,18 @@
 package com.catalog.service;
 
+import com.catalog.domain.entity.Category;
 import com.catalog.domain.entity.Product;
+import com.catalog.domain.entity.Store;
 import com.catalog.dto.product.ProductRequest;
 import com.catalog.dto.product.ProductResponse;
+import com.catalog.repository.CategoryRepository;
 import com.catalog.repository.ProductRepository;
+import com.catalog.repository.StoreRepository;
 import com.catalog.util.SlugUtils;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import com.catalog.domain.entity.Category;
-import com.catalog.domain.entity.Store;
-import com.catalog.repository.CategoryRepository;
-import com.catalog.repository.StoreRepository;
-import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -28,17 +27,14 @@ public class ProductService {
     private final AccessControlService access;
 
     public ProductResponse create(String storeSlug, ProductRequest req, Long userId) {
-
         Store store = getStoreBySlug(storeSlug);
 
         access.checkAdminAccess(userId, store.getId());
 
-        if (req.getPromotionalPrice() != null &&
-                req.getPromotionalPrice().compareTo(req.getPrice()) >= 0) {
-            throw new RuntimeException("Preço promocional inválido");
-        }
+        validatePromotionalPrice(req);
 
         Category category = categoryRepository.findById(req.getCategoryId())
+                .filter(c -> c.getDeletedAt() == null)
                 .orElseThrow(() -> new RuntimeException("Categoria não encontrada"));
 
         if (!category.getStore().getId().equals(store.getId())) {
@@ -62,31 +58,49 @@ public class ProductService {
         return map(productRepository.save(product));
     }
 
-    public Page<ProductResponse> list(String storeSlug, String search, Pageable pageable) {
+    public Page<ProductResponse> listAdmin(String storeSlug, String search, Pageable pageable, Long userId) {
+        Store store = getStoreBySlug(storeSlug);
 
+        access.checkAdminAccess(userId, store.getId());
+
+        Page<Product> page;
+
+        if (search != null && !search.isBlank()) {
+            page = productRepository.findByStoreIdAndNameContainingIgnoreCaseAndDeletedAtIsNull(
+                    store.getId(), search, pageable
+            );
+        } else {
+            page = productRepository.findByStoreIdAndDeletedAtIsNull(
+                    store.getId(), pageable
+            );
+        }
+
+        return page.map(this::map);
+    }
+
+    public Page<ProductResponse> listPublic(String storeSlug, String search, Pageable pageable) {
         Store store = getStoreBySlug(storeSlug);
 
         Page<Product> page;
 
         if (search != null && !search.isBlank()) {
-            page = productRepository
-                    .findByStoreIdAndNameContainingIgnoreCaseAndDeletedAtIsNull(
-                            store.getId(), search, pageable);
+            page = productRepository.findByStoreIdAndNameContainingIgnoreCaseAndVisibleTrueAndDeletedAtIsNull(
+                    store.getId(), search, pageable
+            );
         } else {
-            page = productRepository
-                    .findByStoreIdAndVisibleTrueAndDeletedAtIsNull(
-                            store.getId(), pageable);
+            page = productRepository.findByStoreIdAndVisibleTrueAndDeletedAtIsNull(
+                    store.getId(), pageable
+            );
         }
 
         return page.map(this::map);
     }
 
     public Page<ProductResponse> listByCategory(String storeSlug, String categorySlug, Pageable pageable) {
-
         Store store = getStoreBySlug(storeSlug);
 
         Category category = categoryRepository
-                .findByStoreIdAndSlug(store.getId(), categorySlug)
+                .findByStoreIdAndSlugAndDeletedAtIsNull(store.getId(), categorySlug)
                 .orElseThrow(() -> new RuntimeException("Categoria não encontrada"));
 
         Page<Product> page = productRepository
@@ -100,39 +114,36 @@ public class ProductService {
     }
 
     public ProductResponse getBySlug(String storeSlug, String productSlug) {
-
         Store store = getStoreBySlug(storeSlug);
 
-        Product p = productRepository
-                .findByStoreIdAndSlug(store.getId(), productSlug)
+        Product product = productRepository
+                .findByStoreIdAndSlugAndDeletedAtIsNull(store.getId(), productSlug)
                 .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
 
-        if (p.getDeletedAt() != null || !p.getVisible()) {
+        if (!product.getVisible()) {
             throw new RuntimeException("Produto não disponível");
         }
 
-        return map(p);
+        return map(product);
     }
 
     public ProductResponse update(String storeSlug, Long id, ProductRequest req, Long userId) {
-
         Store store = getStoreBySlug(storeSlug);
 
         access.checkAdminAccess(userId, store.getId());
 
         Product product = productRepository.findById(id)
+                .filter(p -> p.getDeletedAt() == null)
                 .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
 
         if (!product.getStore().getId().equals(store.getId())) {
             throw new RuntimeException("Produto não pertence à loja");
         }
 
-        if (req.getPromotionalPrice() != null &&
-                req.getPromotionalPrice().compareTo(req.getPrice()) >= 0) {
-            throw new RuntimeException("Preço promocional inválido");
-        }
+        validatePromotionalPrice(req);
 
         Category category = categoryRepository.findById(req.getCategoryId())
+                .filter(c -> c.getDeletedAt() == null)
                 .orElseThrow(() -> new RuntimeException("Categoria não encontrada"));
 
         if (!category.getStore().getId().equals(store.getId())) {
@@ -160,20 +171,30 @@ public class ProductService {
     }
 
     public void delete(String storeSlug, Long id, Long userId) {
-
         Store store = getStoreBySlug(storeSlug);
 
         access.checkAdminAccess(userId, store.getId());
 
-        Product p = productRepository.findById(id)
+        Product product = productRepository.findById(id)
+                .filter(p -> p.getDeletedAt() == null)
                 .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
 
-        if (!p.getStore().getId().equals(store.getId())) {
+        if (!product.getStore().getId().equals(store.getId())) {
             throw new RuntimeException("Produto não pertence à loja");
         }
 
-        p.setDeletedAt(LocalDateTime.now());
-        productRepository.save(p);
+        product.setDeletedAt(LocalDateTime.now());
+        product.setUpdatedAt(LocalDateTime.now());
+        product.setUpdatedBy(userId);
+
+        productRepository.save(product);
+    }
+
+    private void validatePromotionalPrice(ProductRequest req) {
+        if (req.getPromotionalPrice() != null &&
+                req.getPromotionalPrice().compareTo(req.getPrice()) >= 0) {
+            throw new RuntimeException("Preço promocional inválido");
+        }
     }
 
     private String generateUniqueProductSlug(Long storeId, String name) {
@@ -206,22 +227,22 @@ public class ProductService {
         }
     }
 
-    private Store getStoreBySlug(String slug) {
-        return storeRepository.findBySlug(slug)
+    private Store getStoreBySlug(String storeSlug) {
+        return storeRepository.findBySlug(storeSlug)
                 .orElseThrow(() -> new RuntimeException("Loja não encontrada"));
     }
 
-    private ProductResponse map(Product p) {
+    private ProductResponse map(Product product) {
         return ProductResponse.builder()
-                .id(p.getId())
-                .name(p.getName())
-                .slug(p.getSlug())
-                .description(p.getDescription())
-                .price(p.getPrice())
-                .promotionalPrice(p.getPromotionalPrice())
-                .visible(p.getVisible())
-                .createdAt(p.getCreatedAt())
-                .categoryId(p.getCategory().getId())
+                .id(product.getId())
+                .name(product.getName())
+                .slug(product.getSlug())
+                .description(product.getDescription())
+                .price(product.getPrice())
+                .promotionalPrice(product.getPromotionalPrice())
+                .visible(product.getVisible())
+                .createdAt(product.getCreatedAt())
+                .categoryId(product.getCategory().getId())
                 .build();
     }
 }
