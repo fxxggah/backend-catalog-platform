@@ -12,6 +12,7 @@ public class StoreInviteResponse {
 
     private Long id;
     private String email;
+    private String token;
     private LocalDateTime expiresAt;
     private LocalDateTime usedAt;
 }

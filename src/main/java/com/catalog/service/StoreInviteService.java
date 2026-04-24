@@ -32,8 +32,14 @@ public class StoreInviteService {
 
         access.checkOwnerAccess(userId, store.getId());
 
-        storeUserRepository.findByUserIdAndStoreId(userId, store.getId())
-                .ifPresent(u -> { throw new RuntimeException("Esse usuario ja é admin da loja"); });
+        boolean alreadyInvited = repo.existsByEmailAndStoreIdAndUsedAtIsNull(
+                req.getEmail(),
+                store.getId()
+        );
+
+        if (alreadyInvited) {
+            throw new RuntimeException("Já existe um convite pendente para este email");
+        }
 
         StoreInvite invite = new StoreInvite();
         invite.setStore(store);
@@ -108,6 +114,7 @@ public class StoreInviteService {
         return StoreInviteResponse.builder()
                 .id(i.getId())
                 .email(i.getEmail())
+                .token(i.getToken()) // 🔥 ADICIONAR
                 .expiresAt(i.getExpiresAt())
                 .usedAt(i.getUsedAt())
                 .build();

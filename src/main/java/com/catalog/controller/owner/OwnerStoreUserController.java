@@ -18,6 +18,16 @@ public class OwnerStoreUserController {
 
     private final StoreUserService storeUserService;
 
+    @GetMapping("/me")
+    public ResponseEntity<StoreUserResponse> me(
+            @PathVariable String storeSlug,
+            @CurrentUser Long userId) {
+
+        return ResponseEntity.ok(
+                storeUserService.getCurrentUserInStore(storeSlug, userId)
+        );
+    }
+
     @GetMapping
     public ResponseEntity<List<StoreUserResponse>> list(
             @PathVariable String storeSlug,

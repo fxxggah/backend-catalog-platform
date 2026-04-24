@@ -1,5 +1,6 @@
 package com.catalog.controller.viewer;
 
+import com.catalog.annotation.CurrentUser;
 import com.catalog.domain.entity.User;
 import com.catalog.dto.storeinvite.StoreInviteResponse;
 import com.catalog.service.StoreInviteService;
@@ -26,7 +27,7 @@ public class PublicStoreInviteController {
     @PostMapping("/accept/{token}")
     public ResponseEntity<Void> accept(
             @PathVariable String token,
-            @RequestHeader("userId") Long userId) {
+            @CurrentUser Long userId) {
 
         User user = new User();
         user.setId(userId);

@@ -19,4 +19,6 @@ public interface StoreInviteRepository extends JpaRepository<StoreInvite, Long> 
 
     Optional<StoreInvite> findByTokenAndUsedAtIsNullAndExpiresAtAfter(String token, LocalDateTime now);
 
+    boolean existsByEmailAndStoreIdAndUsedAtIsNull(String email, Long storeId);
+
 }

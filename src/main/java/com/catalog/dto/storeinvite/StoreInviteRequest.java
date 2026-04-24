@@ -2,7 +2,6 @@ package com.catalog.dto.storeinvite;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 @Data
@@ -11,10 +10,7 @@ import lombok.*;
 @NoArgsConstructor
 public class StoreInviteRequest {
 
-    @NotNull
-    private Long storeId;
-
-    @NotBlank
-    @Email
+    @NotBlank(message = "O email é obrigatório")
+    @Email(message = "Email inválido")
     private String email;
 }
