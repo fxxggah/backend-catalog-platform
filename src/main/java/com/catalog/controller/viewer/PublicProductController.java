@@ -8,6 +8,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/stores/{storeSlug}/products")
 @RequiredArgsConstructor
@@ -33,6 +35,17 @@ public class PublicProductController {
 
         return ResponseEntity.ok(
                 productService.getBySlug(storeSlug, productSlug)
+        );
+    }
+
+    @GetMapping("/slug/{productSlug}/related")
+    public ResponseEntity<List<ProductResponse>> getRelatedProducts(
+            @PathVariable String storeSlug,
+            @PathVariable String productSlug,
+            @RequestParam(defaultValue = "10") int limit) {
+
+        return ResponseEntity.ok(
+                productService.getRelatedProducts(storeSlug, productSlug, limit)
         );
     }
 }

@@ -13,6 +13,7 @@ import com.catalog.repository.StoreRepository;
 import com.catalog.util.SlugUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +25,9 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class ProductService {
+
+    private static final int DEFAULT_RELATED_PRODUCTS_LIMIT = 10;
+    private static final int MAX_RELATED_PRODUCTS_LIMIT = 10;
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
@@ -131,6 +135,34 @@ public class ProductService {
         return map(product);
     }
 
+    public List<ProductResponse> getRelatedProducts(String storeSlug, String productSlug, int limit) {
+        Store store = getStoreBySlug(storeSlug);
+
+        Product currentProduct = productRepository
+                .findByStoreIdAndSlugAndDeletedAtIsNull(store.getId(), productSlug)
+                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+
+        if (!currentProduct.getVisible()) {
+            throw new RuntimeException("Produto não disponível");
+        }
+
+        Long categoryId = currentProduct.getCategory().getId();
+        int safeLimit = normalizeRelatedProductsLimit(limit);
+
+        Pageable pageable = PageRequest.of(0, safeLimit);
+
+        return productRepository
+                .findByStoreIdAndCategoryIdAndIdNotAndVisibleTrueAndDeletedAtIsNull(
+                        store.getId(),
+                        categoryId,
+                        currentProduct.getId(),
+                        pageable
+                )
+                .stream()
+                .map(this::map)
+                .toList();
+    }
+
     public ProductResponse getById(String storeSlug, Long id, Long userId) {
         Store store = getStoreBySlug(storeSlug);
 
@@ -208,6 +240,14 @@ public class ProductService {
         product.setUpdatedBy(userId);
 
         productRepository.save(product);
+    }
+
+    private int normalizeRelatedProductsLimit(int limit) {
+        if (limit <= 0) {
+            return DEFAULT_RELATED_PRODUCTS_LIMIT;
+        }
+
+        return Math.min(limit, MAX_RELATED_PRODUCTS_LIMIT);
     }
 
     private void validatePromotionalPrice(ProductRequest req) {
