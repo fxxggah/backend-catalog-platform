@@ -15,6 +15,7 @@ public class StoreRequest {
     private String name;
 
     private String logo;
+    private String favicon;
 
     private String primaryColor;
     private String secondaryColor;

@@ -14,6 +14,7 @@ public class StoreResponse {
     private String name;
     private String slug;
     private String logo;
+    private String favicon;
 
     private String primaryColor;
     private String secondaryColor;

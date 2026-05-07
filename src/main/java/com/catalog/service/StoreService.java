@@ -30,6 +30,7 @@ public class StoreService {
         store.setName(req.getName());
         store.setSlug(generatedSlug);
         store.setLogo(req.getLogo());
+        store.setFavicon(req.getFavicon());
         store.setPrimaryColor(req.getPrimaryColor());
         store.setSecondaryColor(req.getSecondaryColor());
         store.setTertiaryColor(req.getTertiaryColor());
@@ -84,6 +85,7 @@ public class StoreService {
 
         store.setName(req.getName());
         store.setLogo(req.getLogo());
+        store.setFavicon(req.getFavicon());
         store.setPrimaryColor(req.getPrimaryColor());
         store.setSecondaryColor(req.getSecondaryColor());
         store.setTertiaryColor(req.getTertiaryColor());
@@ -151,6 +153,7 @@ public class StoreService {
                 .name(s.getName())
                 .slug(s.getSlug())
                 .logo(s.getLogo())
+                .favicon(s.getFavicon())
                 .primaryColor(s.getPrimaryColor())
                 .secondaryColor(s.getSecondaryColor())
                 .tertiaryColor(s.getTertiaryColor())

@@ -30,6 +30,9 @@ public class Store {
     @Column(length = 500)
     private String logo;
 
+    @Column(length = 500)
+    private String favicon;
+
     @Column(length = 20)
     private String primaryColor;
 
