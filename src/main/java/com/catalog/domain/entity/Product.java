@@ -1,6 +1,7 @@
 package com.catalog.domain.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -33,10 +34,11 @@ public class Product {
     @Column(nullable = false, length = 250)
     private String name;
 
-    @Column(nullable = false, length = 250)
+    @Size(max = 1000)
+    @Column(nullable = false)
     private String slug;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT", length = 1000)
     private String description;
 
     @Column(nullable = false, precision = 10, scale = 2)

@@ -15,6 +15,7 @@ public class ProductRequest {
     @Size(max = 250)
     private String name;
 
+    @Size(max = 1000, message = "A descrição deve ter no máximo 1000 caracteres")
     private String description;
 
     @NotNull
