@@ -34,10 +34,10 @@ public class Product {
     @Column(nullable = false, length = 250)
     private String name;
 
-    @Size(max = 1000)
     @Column(nullable = false)
     private String slug;
 
+    @Size(max = 1000)
     @Column(columnDefinition = "TEXT", length = 1000)
     private String description;
 
