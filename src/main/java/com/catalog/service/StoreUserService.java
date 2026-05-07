@@ -67,6 +67,9 @@ public class StoreUserService {
                 .id(storeUser.getId())
                 .userId(storeUser.getUser().getId())
                 .storeId(storeUser.getStore().getId())
+                .name(storeUser.getUser().getName())
+                .email(storeUser.getUser().getEmail())
+                .pictureUrl(storeUser.getUser().getPictureUrl())
                 .role(storeUser.getRole())
                 .createdAt(storeUser.getCreatedAt())
                 .build();
