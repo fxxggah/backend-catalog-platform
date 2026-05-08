@@ -242,6 +242,30 @@ public class ProductService {
         productRepository.save(product);
     }
 
+    public List<ProductResponse> getFeaturedProducts(String storeSlug) {
+        Store store = getStoreBySlug(storeSlug);
+
+        return productRepository
+                .findTop8ByStoreIdAndFeaturedTrueAndVisibleTrueAndDeletedAtIsNullOrderByCreatedAtDesc(
+                        store.getId()
+                )
+                .stream()
+                .map(this::map)
+                .toList();
+    }
+
+    public List<ProductResponse> getNewArrivals(String storeSlug) {
+        Store store = getStoreBySlug(storeSlug);
+
+        return productRepository
+                .findTop8ByStoreIdAndVisibleTrueAndDeletedAtIsNullOrderByCreatedAtDesc(
+                        store.getId()
+                )
+                .stream()
+                .map(this::map)
+                .toList();
+    }
+
     private int normalizeRelatedProductsLimit(int limit) {
         if (limit <= 0) {
             return DEFAULT_RELATED_PRODUCTS_LIMIT;
@@ -301,6 +325,7 @@ public class ProductService {
                 .price(product.getPrice())
                 .promotionalPrice(product.getPromotionalPrice())
                 .visible(product.getVisible())
+                .featured(product.getFeatured())
                 .createdAt(product.getCreatedAt())
                 .categoryId(product.getCategory().getId())
                 .images(

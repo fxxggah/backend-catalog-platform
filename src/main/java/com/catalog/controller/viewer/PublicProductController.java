@@ -28,6 +28,24 @@ public class PublicProductController {
         );
     }
 
+    @GetMapping("/featured")
+    public ResponseEntity<List<ProductResponse>> getFeaturedProducts(
+            @PathVariable String storeSlug) {
+
+        return ResponseEntity.ok(
+                productService.getFeaturedProducts(storeSlug)
+        );
+    }
+
+    @GetMapping("/new-arrivals")
+    public ResponseEntity<List<ProductResponse>> getNewArrivals(
+            @PathVariable String storeSlug) {
+
+        return ResponseEntity.ok(
+                productService.getNewArrivals(storeSlug)
+        );
+    }
+
     @GetMapping("/slug/{productSlug}")
     public ResponseEntity<ProductResponse> getBySlug(
             @PathVariable String storeSlug,

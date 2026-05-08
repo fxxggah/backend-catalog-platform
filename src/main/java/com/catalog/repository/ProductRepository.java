@@ -46,4 +46,12 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     Optional<Product> findByStoreIdAndSlugAndDeletedAtIsNull(Long storeId, String slug);
 
     boolean existsByStoreIdAndSlug(Long storeId, String slug);
+
+    List<Product> findTop8ByStoreIdAndFeaturedTrueAndVisibleTrueAndDeletedAtIsNullOrderByCreatedAtDesc(
+            Long storeId
+    );
+
+    List<Product> findTop8ByStoreIdAndVisibleTrueAndDeletedAtIsNullOrderByCreatedAtDesc(
+            Long storeId
+    );
 }

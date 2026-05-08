@@ -27,5 +27,7 @@ public class ProductResponse {
 
     private Long categoryId;
 
+    private Boolean featured;
+
     private List<ProductImageResponse> images;
 }

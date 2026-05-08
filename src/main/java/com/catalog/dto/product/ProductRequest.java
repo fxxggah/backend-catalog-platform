@@ -28,5 +28,7 @@ public class ProductRequest {
     @NotNull
     private Long categoryId;
 
+    private Boolean featured;
+
     private Boolean visible;
 }
