@@ -59,6 +59,7 @@ public class ProductService {
         product.setPromotionalPrice(req.getPromotionalPrice());
         product.setCategory(category);
         product.setStore(store);
+        product.setFeatured(req.getFeatured() != null ? req.getFeatured() : false);
         product.setVisible(req.getVisible() != null ? req.getVisible() : true);
         product.setCreatedAt(LocalDateTime.now());
         product.setCreatedBy(userId);
@@ -215,6 +216,9 @@ public class ProductService {
         product.setPrice(req.getPrice());
         product.setPromotionalPrice(req.getPromotionalPrice());
         product.setCategory(category);
+        product.setFeatured(
+                req.getFeatured() != null ? req.getFeatured() : false
+        );
         product.setVisible(req.getVisible() != null ? req.getVisible() : true);
         product.setUpdatedAt(LocalDateTime.now());
         product.setUpdatedBy(userId);
