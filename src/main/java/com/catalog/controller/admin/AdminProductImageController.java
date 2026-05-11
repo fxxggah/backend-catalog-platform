@@ -57,10 +57,11 @@ public class AdminProductImageController {
     @PutMapping("/reorder")
     public ResponseEntity<Void> reorder(
             @PathVariable String storeSlug,
+            @PathVariable Long productId,
             @Valid @RequestBody ProductImageReorderRequest request,
             @CurrentUser Long userId) {
 
-        productImageService.reorder(storeSlug, request, userId);
+        productImageService.reorder(storeSlug, productId, request, userId);
         return ResponseEntity.noContent().build();
     }
 }
