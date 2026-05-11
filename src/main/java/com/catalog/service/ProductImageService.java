@@ -27,7 +27,6 @@ public class ProductImageService {
     private final AccessControlService access;
 
     public ProductImageResponse upload(String storeSlug, UploadImageRequest req, Long userId) {
-
         Store store = getStoreBySlug(storeSlug);
 
         Product product = productRepository.findById(req.getProductId())
@@ -56,7 +55,6 @@ public class ProductImageService {
     }
 
     public List<ProductImageResponse> getByProduct(String storeSlug, Long productId) {
-
         Store store = getStoreBySlug(storeSlug);
 
         Product product = productRepository.findById(productId)
@@ -72,17 +70,16 @@ public class ProductImageService {
                 .toList();
     }
 
-    public void reorder(String storeSlug, ProductImageReorderRequest request, Long userId) {
-
+    public void reorder(
+            String storeSlug,
+            Long productId,
+            ProductImageReorderRequest request,
+            Long userId
+    ) {
         Store store = getStoreBySlug(storeSlug);
 
-        List<ProductImage> images = repo.findByProductIdOrderByPositionAsc(request.getProductId());
-
-        if (images.isEmpty()) {
-            throw new RuntimeException("Produto não possui imagens");
-        }
-
-        Product product = images.get(0).getProduct();
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
 
         access.checkAdminAccess(userId, store.getId());
 
@@ -90,31 +87,31 @@ public class ProductImageService {
             throw new RuntimeException("Produto não pertence à loja");
         }
 
+        List<ProductImage> images = repo.findByProductIdOrderByPositionAsc(productId);
+
         if (images.size() != request.getImageIds().size()) {
             throw new RuntimeException("Lista inválida para reordenação");
         }
 
-        Map<Long, ProductImage> map = images.stream()
-                .collect(Collectors.toMap(ProductImage::getId, img -> img));
+        Map<Long, ProductImage> imageMap = images.stream()
+                .collect(Collectors.toMap(ProductImage::getId, image -> image));
 
         for (int i = 0; i < request.getImageIds().size(); i++) {
-
             Long imageId = request.getImageIds().get(i);
 
-            ProductImage img = map.get(imageId);
+            ProductImage image = imageMap.get(imageId);
 
-            if (img == null) {
+            if (image == null) {
                 throw new RuntimeException("Imagem inválida");
             }
 
-            img.setPosition(i + 1);
+            image.setPosition(i + 1);
         }
 
         repo.saveAll(images);
     }
 
     public void delete(String storeSlug, Long imageId, Long userId) {
-
         Store store = getStoreBySlug(storeSlug);
 
         ProductImage image = repo.findById(imageId)
@@ -144,11 +141,11 @@ public class ProductImageService {
                 .orElseThrow(() -> new RuntimeException("Loja não encontrada"));
     }
 
-    private ProductImageResponse map(ProductImage i) {
+    private ProductImageResponse map(ProductImage image) {
         return ProductImageResponse.builder()
-                .id(i.getId())
-                .imageUrl(i.getImageUrl())
-                .position(i.getPosition())
+                .id(image.getId())
+                .imageUrl(image.getImageUrl())
+                .position(image.getPosition())
                 .build();
     }
 }
