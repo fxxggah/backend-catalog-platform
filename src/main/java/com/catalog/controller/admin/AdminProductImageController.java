@@ -64,4 +64,5 @@ public class AdminProductImageController {
         productImageService.reorder(storeSlug, productId, request, userId);
         return ResponseEntity.noContent().build();
     }
+
 }
