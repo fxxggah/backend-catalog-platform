@@ -19,7 +19,7 @@ import java.util.List;
         indexes = {
                 @Index(name = "idx_product_store", columnList = "store_id"),
                 @Index(name = "idx_product_category", columnList = "category_id"),
-                @Index(name = "idx_product_visible", columnList = "visible"),
+                @Index(name = "idx_product_in_stock", columnList = "in_stock"),
                 @Index(name = "idx_product_slug", columnList = "store_id, slug")
         }
 )
@@ -54,6 +54,9 @@ public class Product {
     @Column(nullable = false)
     private Boolean featured = false;
 
+    @Column(name = "in_stock", nullable = false)
+    private Boolean inStock = true;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "store_id", nullable = false)
     private Store store;
@@ -61,9 +64,6 @@ public class Product {
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("position ASC")
     private List<ProductImage> images = new ArrayList<>();
-
-    @Column(nullable = false)
-    private Boolean visible = true;
 
     private LocalDateTime deletedAt;
 

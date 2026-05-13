@@ -21,13 +21,12 @@ public class ProductResponse {
     private BigDecimal price;
     private BigDecimal promotionalPrice;
 
-    private Boolean visible;
+    private Boolean inStock;
+    private Boolean featured;
 
     private LocalDateTime createdAt;
 
     private Long categoryId;
-
-    private Boolean featured;
 
     private List<ProductImageResponse> images;
 }

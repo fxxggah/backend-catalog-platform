@@ -30,5 +30,5 @@ public class ProductRequest {
 
     private Boolean featured;
 
-    private Boolean visible;
+    private Boolean inStock;
 }

@@ -49,10 +49,6 @@ public class AnalyticsService {
                 .findByStoreIdAndSlugAndDeletedAtIsNull(store.getId(), productSlug)
                 .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
 
-        if (!product.getVisible()) {
-            throw new RuntimeException("Produto não disponível");
-        }
-
         saveEvent(store, product, AnalyticsEventType.PRODUCT_VIEW, request);
     }
 

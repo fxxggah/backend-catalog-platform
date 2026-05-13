@@ -49,6 +49,13 @@ public class ProductService {
             throw new RuntimeException("Categoria não pertence à loja");
         }
 
+        boolean inStock = req.getInStock() != null ? req.getInStock() : true;
+        boolean featured = Boolean.TRUE.equals(req.getFeatured());
+
+        if (!inStock && featured) {
+            throw new RuntimeException("Produto esgotado não pode ser marcado como destaque");
+        }
+
         String generatedSlug = generateUniqueProductSlug(store.getId(), req.getName());
 
         Product product = new Product();
@@ -59,8 +66,8 @@ public class ProductService {
         product.setPromotionalPrice(req.getPromotionalPrice());
         product.setCategory(category);
         product.setStore(store);
-        product.setFeatured(req.getFeatured() != null ? req.getFeatured() : false);
-        product.setVisible(req.getVisible() != null ? req.getVisible() : true);
+        product.setInStock(inStock);
+        product.setFeatured(featured);
         product.setCreatedAt(LocalDateTime.now());
         product.setCreatedBy(userId);
 
@@ -93,11 +100,11 @@ public class ProductService {
         Page<Product> page;
 
         if (search != null && !search.isBlank()) {
-            page = productRepository.findByStoreIdAndNameContainingIgnoreCaseAndVisibleTrueAndDeletedAtIsNull(
+            page = productRepository.findPublicByStoreIdAndNameOrderByInStockFirst(
                     store.getId(), search, pageable
             );
         } else {
-            page = productRepository.findByStoreIdAndVisibleTrueAndDeletedAtIsNull(
+            page = productRepository.findPublicByStoreIdOrderByInStockFirst(
                     store.getId(), pageable
             );
         }
@@ -112,12 +119,11 @@ public class ProductService {
                 .findByStoreIdAndSlugAndDeletedAtIsNull(store.getId(), categorySlug)
                 .orElseThrow(() -> new RuntimeException("Categoria não encontrada"));
 
-        Page<Product> page = productRepository
-                .findByStoreIdAndCategoryIdAndVisibleTrueAndDeletedAtIsNull(
-                        store.getId(),
-                        category.getId(),
-                        pageable
-                );
+        Page<Product> page = productRepository.findPublicByStoreIdAndCategoryIdOrderByInStockFirst(
+                store.getId(),
+                category.getId(),
+                pageable
+        );
 
         return page.map(this::map);
     }
@@ -129,10 +135,6 @@ public class ProductService {
                 .findByStoreIdAndSlugAndDeletedAtIsNull(store.getId(), productSlug)
                 .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
 
-        if (!product.getVisible()) {
-            throw new RuntimeException("Produto não disponível");
-        }
-
         return map(product);
     }
 
@@ -143,17 +145,13 @@ public class ProductService {
                 .findByStoreIdAndSlugAndDeletedAtIsNull(store.getId(), productSlug)
                 .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
 
-        if (!currentProduct.getVisible()) {
-            throw new RuntimeException("Produto não disponível");
-        }
-
         Long categoryId = currentProduct.getCategory().getId();
         int safeLimit = normalizeRelatedProductsLimit(limit);
 
         Pageable pageable = PageRequest.of(0, safeLimit);
 
         return productRepository
-                .findByStoreIdAndCategoryIdAndIdNotAndVisibleTrueAndDeletedAtIsNull(
+                .findByStoreIdAndCategoryIdAndIdNotAndInStockTrueAndDeletedAtIsNull(
                         store.getId(),
                         categoryId,
                         currentProduct.getId(),
@@ -203,6 +201,13 @@ public class ProductService {
             throw new RuntimeException("Categoria não pertence à loja");
         }
 
+        boolean inStock = req.getInStock() != null ? req.getInStock() : true;
+        boolean featured = Boolean.TRUE.equals(req.getFeatured());
+
+        if (!inStock && featured) {
+            throw new RuntimeException("Produto esgotado não pode ser marcado como destaque");
+        }
+
         product.setName(req.getName());
 
         String generatedSlug = generateUniqueProductSlugForUpdate(
@@ -216,10 +221,8 @@ public class ProductService {
         product.setPrice(req.getPrice());
         product.setPromotionalPrice(req.getPromotionalPrice());
         product.setCategory(category);
-        product.setFeatured(
-                req.getFeatured() != null ? req.getFeatured() : false
-        );
-        product.setVisible(req.getVisible() != null ? req.getVisible() : true);
+        product.setInStock(inStock);
+        product.setFeatured(featured);
         product.setUpdatedAt(LocalDateTime.now());
         product.setUpdatedBy(userId);
 
@@ -250,7 +253,7 @@ public class ProductService {
         Store store = getStoreBySlug(storeSlug);
 
         return productRepository
-                .findTop8ByStoreIdAndFeaturedTrueAndVisibleTrueAndDeletedAtIsNullOrderByCreatedAtDesc(
+                .findTop8ByStoreIdAndFeaturedTrueAndInStockTrueAndDeletedAtIsNullOrderByCreatedAtDesc(
                         store.getId()
                 )
                 .stream()
@@ -262,7 +265,7 @@ public class ProductService {
         Store store = getStoreBySlug(storeSlug);
 
         return productRepository
-                .findTop8ByStoreIdAndVisibleTrueAndDeletedAtIsNullOrderByCreatedAtDesc(
+                .findTop8ByStoreIdAndInStockTrueAndDeletedAtIsNullOrderByCreatedAtDesc(
                         store.getId()
                 )
                 .stream()
@@ -328,7 +331,7 @@ public class ProductService {
                 .description(product.getDescription())
                 .price(product.getPrice())
                 .promotionalPrice(product.getPromotionalPrice())
-                .visible(product.getVisible())
+                .inStock(product.getInStock())
                 .featured(product.getFeatured())
                 .createdAt(product.getCreatedAt())
                 .categoryId(product.getCategory().getId())
