@@ -1,5 +1,6 @@
 package com.catalog.domain.entity;
 
+import com.catalog.domain.enums.StoreTemplate;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -34,15 +35,6 @@ public class Store {
     private String favicon;
 
     @Column(length = 20)
-    private String primaryColor;
-
-    @Column(length = 20)
-    private String secondaryColor;
-
-    @Column(length = 20)
-    private String tertiaryColor;
-
-    @Column(length = 20)
     private String whatsappNumber;
 
     @Column(length = 100)
@@ -51,8 +43,9 @@ public class Store {
     @Column(length = 100)
     private String facebook;
 
-    @Column(length = 50)
-    private String template;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 50)
+    private StoreTemplate template;
 
     @Column(nullable = false)
     private Boolean active = true;

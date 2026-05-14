@@ -1,5 +1,6 @@
 package com.catalog.dto.store;
 
+import com.catalog.domain.enums.StoreTemplate;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -16,15 +17,11 @@ public class StoreResponse {
     private String logo;
     private String favicon;
 
-    private String primaryColor;
-    private String secondaryColor;
-    private String tertiaryColor;
-
     private String whatsappNumber;
     private String instagram;
     private String facebook;
 
-    private String template;
+    private StoreTemplate template;
     private Boolean active;
 
     private String street;

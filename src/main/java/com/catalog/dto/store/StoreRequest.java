@@ -1,5 +1,6 @@
 package com.catalog.dto.store;
 
+import com.catalog.domain.enums.StoreTemplate;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
@@ -17,15 +18,11 @@ public class StoreRequest {
     private String logo;
     private String favicon;
 
-    private String primaryColor;
-    private String secondaryColor;
-    private String tertiaryColor;
-
     private String whatsappNumber;
     private String instagram;
     private String facebook;
 
-    private String template;
+    private StoreTemplate template;
 
     private String street;
     private String number;

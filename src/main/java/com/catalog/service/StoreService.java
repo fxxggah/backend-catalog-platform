@@ -31,9 +31,6 @@ public class StoreService {
         store.setSlug(generatedSlug);
         store.setLogo(req.getLogo());
         store.setFavicon(req.getFavicon());
-        store.setPrimaryColor(req.getPrimaryColor());
-        store.setSecondaryColor(req.getSecondaryColor());
-        store.setTertiaryColor(req.getTertiaryColor());
         store.setWhatsappNumber(req.getWhatsappNumber());
         store.setInstagram(normalizeInstagram(req.getInstagram()));
         store.setFacebook(req.getFacebook());
@@ -97,9 +94,6 @@ public class StoreService {
 
         store.setLogo(req.getLogo());
         store.setFavicon(req.getFavicon());
-        store.setPrimaryColor(req.getPrimaryColor());
-        store.setSecondaryColor(req.getSecondaryColor());
-        store.setTertiaryColor(req.getTertiaryColor());
         store.setWhatsappNumber(req.getWhatsappNumber());
         store.setInstagram(normalizeInstagram(req.getInstagram()));
         store.setFacebook(req.getFacebook());
@@ -186,9 +180,6 @@ public class StoreService {
                 .slug(s.getSlug())
                 .logo(s.getLogo())
                 .favicon(s.getFavicon())
-                .primaryColor(s.getPrimaryColor())
-                .secondaryColor(s.getSecondaryColor())
-                .tertiaryColor(s.getTertiaryColor())
                 .whatsappNumber(s.getWhatsappNumber())
                 .instagram(s.getInstagram())
                 .facebook(s.getFacebook())
