@@ -35,7 +35,7 @@ public class StoreService {
         store.setSecondaryColor(req.getSecondaryColor());
         store.setTertiaryColor(req.getTertiaryColor());
         store.setWhatsappNumber(req.getWhatsappNumber());
-        store.setInstagram(req.getInstagram());
+        store.setInstagram(normalizeInstagram(req.getInstagram()));
         store.setFacebook(req.getFacebook());
         store.setTemplate(req.getTemplate());
         store.setStreet(req.getStreet());
@@ -101,7 +101,7 @@ public class StoreService {
         store.setSecondaryColor(req.getSecondaryColor());
         store.setTertiaryColor(req.getTertiaryColor());
         store.setWhatsappNumber(req.getWhatsappNumber());
-        store.setInstagram(req.getInstagram());
+        store.setInstagram(normalizeInstagram(req.getInstagram()));
         store.setFacebook(req.getFacebook());
         store.setTemplate(req.getTemplate());
         store.setStreet(req.getStreet());
@@ -169,6 +169,14 @@ public class StoreService {
         }
 
         return slug;
+    }
+
+    private String normalizeInstagram(String instagram) {
+        if (instagram == null || instagram.isBlank()) {
+            return null;
+        }
+
+        return instagram.trim().replaceFirst("^@+", "");
     }
 
     private StoreResponse map(Store s) {
