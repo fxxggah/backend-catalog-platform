@@ -1,13 +1,18 @@
 package com.catalog.service;
 
 import com.catalog.domain.entity.Store;
-import com.catalog.dto.storeinvite.StoreInviteCreateResponse;
 import com.catalog.domain.entity.StoreInvite;
 import com.catalog.domain.entity.StoreUser;
 import com.catalog.domain.entity.User;
 import com.catalog.domain.enums.Role;
+import com.catalog.dto.storeinvite.StoreInviteCreateResponse;
 import com.catalog.dto.storeinvite.StoreInviteRequest;
 import com.catalog.dto.storeinvite.StoreInviteResponse;
+import com.catalog.exception.BadRequestException;
+import com.catalog.exception.ConflictException;
+import com.catalog.exception.ErrorCode;
+import com.catalog.exception.ForbiddenException;
+import com.catalog.exception.NotFoundException;
 import com.catalog.repository.StoreInviteRepository;
 import com.catalog.repository.StoreRepository;
 import com.catalog.repository.StoreUserRepository;
@@ -29,8 +34,7 @@ public class StoreInviteService {
     private final UserRepository userRepository;
     private final AccessControlService access;
 
-    public StoreInviteCreateResponse  invite(String storeSlug, StoreInviteRequest req, Long userId) {
-
+    public StoreInviteCreateResponse invite(String storeSlug, StoreInviteRequest req, Long userId) {
         Store store = getStoreBySlug(storeSlug);
 
         access.checkOwnerAccess(userId, store.getId());
@@ -41,7 +45,10 @@ public class StoreInviteService {
         );
 
         if (alreadyInvited) {
-            throw new RuntimeException("Já existe um convite pendente para este email");
+            throw new ConflictException(
+                    ErrorCode.INVALID_OPERATION,
+                    "Já existe um convite pendente para este email."
+            );
         }
 
         StoreInvite invite = new StoreInvite();
@@ -56,20 +63,26 @@ public class StoreInviteService {
     }
 
     public void accept(String token, Long userId) {
-
         StoreInvite invite = repo
                 .findByTokenAndUsedAtIsNullAndExpiresAtAfter(
                         token,
                         LocalDateTime.now()
                 )
-                .orElseThrow(() -> new RuntimeException("Convite inválido"));
+                .orElseThrow(() -> new BadRequestException(
+                        ErrorCode.INVALID_INVITE,
+                        "Convite inválido ou expirado."
+                ));
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new NotFoundException(
+                        ErrorCode.USER_NOT_FOUND,
+                        "Usuário não encontrado."
+                ));
 
         if (!user.getEmail().equalsIgnoreCase(invite.getEmail())) {
-            throw new RuntimeException(
-                    "Este convite pertence a outro email"
+            throw new ForbiddenException(
+                    ErrorCode.ACCESS_DENIED,
+                    "Este convite pertence a outro email."
             );
         }
 
@@ -79,8 +92,9 @@ public class StoreInviteService {
         );
 
         if (alreadyMember) {
-            throw new RuntimeException(
-                    "Usuário já pertence à loja"
+            throw new ConflictException(
+                    ErrorCode.INVALID_OPERATION,
+                    "Usuário já pertence à loja."
             );
         }
 
@@ -98,7 +112,6 @@ public class StoreInviteService {
     }
 
     public List<StoreInviteResponse> listByStore(String storeSlug, Long userId) {
-
         Store store = getStoreBySlug(storeSlug);
 
         access.checkOwnerAccess(userId, store.getId());
@@ -110,16 +123,21 @@ public class StoreInviteService {
     }
 
     public void delete(String storeSlug, Long inviteId, Long userId) {
-
         Store store = getStoreBySlug(storeSlug);
 
         StoreInvite invite = repo.findById(inviteId)
-                .orElseThrow(() -> new RuntimeException("Convite não encontrado"));
+                .orElseThrow(() -> new NotFoundException(
+                        ErrorCode.INVITE_NOT_FOUND,
+                        "Convite não encontrado."
+                ));
 
         access.checkOwnerAccess(userId, store.getId());
 
         if (!invite.getStore().getId().equals(store.getId())) {
-            throw new RuntimeException("Convite não pertence à loja");
+            throw new ForbiddenException(
+                    ErrorCode.RESOURCE_NOT_IN_STORE,
+                    "Convite não pertence à loja."
+            );
         }
 
         repo.delete(invite);
@@ -128,14 +146,20 @@ public class StoreInviteService {
     public StoreInviteResponse validateToken(String token) {
         StoreInvite invite = repo
                 .findByTokenAndUsedAtIsNullAndExpiresAtAfter(token, LocalDateTime.now())
-                .orElseThrow(() -> new RuntimeException("Convite inválido"));
+                .orElseThrow(() -> new BadRequestException(
+                        ErrorCode.INVALID_INVITE,
+                        "Convite inválido ou expirado."
+                ));
 
         return map(invite);
     }
 
     private Store getStoreBySlug(String slug) {
         return storeRepository.findBySlug(slug)
-                .orElseThrow(() -> new RuntimeException("Loja não encontrada"));
+                .orElseThrow(() -> new NotFoundException(
+                        ErrorCode.STORE_NOT_FOUND,
+                        "Loja não encontrada."
+                ));
     }
 
     private StoreInviteResponse map(StoreInvite i) {
@@ -156,5 +180,4 @@ public class StoreInviteService {
                 .usedAt(i.getUsedAt())
                 .build();
     }
-
 }

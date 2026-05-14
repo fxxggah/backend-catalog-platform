@@ -4,6 +4,9 @@ import com.catalog.domain.entity.Category;
 import com.catalog.domain.entity.Store;
 import com.catalog.dto.category.CategoryRequest;
 import com.catalog.dto.category.CategoryResponse;
+import com.catalog.exception.ErrorCode;
+import com.catalog.exception.ForbiddenException;
+import com.catalog.exception.NotFoundException;
 import com.catalog.repository.CategoryRepository;
 import com.catalog.repository.StoreRepository;
 import com.catalog.util.SlugUtils;
@@ -66,10 +69,16 @@ public class CategoryService {
 
         Category category = categoryRepository.findById(id)
                 .filter(c -> c.getDeletedAt() == null)
-                .orElseThrow(() -> new RuntimeException("Categoria não encontrada"));
+                .orElseThrow(() -> new NotFoundException(
+                        ErrorCode.CATEGORY_NOT_FOUND,
+                        "Categoria não encontrada."
+                ));
 
         if (!category.getStore().getId().equals(store.getId())) {
-            throw new RuntimeException("Categoria não pertence à loja");
+            throw new ForbiddenException(
+                    ErrorCode.RESOURCE_NOT_IN_STORE,
+                    "Categoria não pertence à loja."
+            );
         }
 
         category.setName(req.getName());
@@ -94,10 +103,16 @@ public class CategoryService {
 
         Category category = categoryRepository.findById(id)
                 .filter(c -> c.getDeletedAt() == null)
-                .orElseThrow(() -> new RuntimeException("Categoria não encontrada"));
+                .orElseThrow(() -> new NotFoundException(
+                        ErrorCode.CATEGORY_NOT_FOUND,
+                        "Categoria não encontrada."
+                ));
 
         if (!category.getStore().getId().equals(store.getId())) {
-            throw new RuntimeException("Categoria não pertence à loja");
+            throw new ForbiddenException(
+                    ErrorCode.RESOURCE_NOT_IN_STORE,
+                    "Categoria não pertence à loja."
+            );
         }
 
         category.setDeletedAt(LocalDateTime.now());
@@ -139,7 +154,10 @@ public class CategoryService {
 
     private Store getStoreBySlug(String storeSlug) {
         return storeRepository.findBySlug(storeSlug)
-                .orElseThrow(() -> new RuntimeException("Loja não encontrada"));
+                .orElseThrow(() -> new NotFoundException(
+                        ErrorCode.STORE_NOT_FOUND,
+                        "Loja não encontrada."
+                ));
     }
 
     private CategoryResponse map(Category category) {

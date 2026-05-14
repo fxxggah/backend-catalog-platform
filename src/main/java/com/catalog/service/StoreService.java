@@ -6,6 +6,8 @@ import com.catalog.domain.entity.User;
 import com.catalog.domain.enums.Role;
 import com.catalog.dto.store.StoreRequest;
 import com.catalog.dto.store.StoreResponse;
+import com.catalog.exception.ErrorCode;
+import com.catalog.exception.NotFoundException;
 import com.catalog.repository.StoreRepository;
 import com.catalog.repository.StoreUserRepository;
 import com.catalog.util.SlugUtils;
@@ -66,10 +68,9 @@ public class StoreService {
 
     @Transactional(readOnly = true)
     public StoreResponse getBySlug(String storeSlug) {
-        Store s = storeRepository.findBySlug(storeSlug)
-                .orElseThrow(() -> new RuntimeException("Loja não encontrada"));
+        Store store = getStoreBySlug(storeSlug);
 
-        return map(s);
+        return map(store);
     }
 
     @Transactional(readOnly = true)
@@ -142,22 +143,12 @@ public class StoreService {
         storeRepository.save(store);
     }
 
-    private String generateUniqueStoreSlug(String name, Long currentStoreId) {
-        String baseSlug = SlugUtils.toSlug(name);
-        String slug = baseSlug;
-        int counter = 2;
-
-        while (storeRepository.existsBySlugAndIdNot(slug, currentStoreId)) {
-            slug = baseSlug + "-" + counter;
-            counter++;
-        }
-
-        return slug;
-    }
-
     private Store getStoreBySlug(String storeSlug) {
         return storeRepository.findBySlug(storeSlug)
-                .orElseThrow(() -> new RuntimeException("Loja não encontrada"));
+                .orElseThrow(() -> new NotFoundException(
+                        ErrorCode.STORE_NOT_FOUND,
+                        "Loja não encontrada."
+                ));
     }
 
     private String generateUniqueStoreSlug(String name) {
@@ -166,6 +157,19 @@ public class StoreService {
         int counter = 2;
 
         while (storeRepository.existsBySlug(slug)) {
+            slug = baseSlug + "-" + counter;
+            counter++;
+        }
+
+        return slug;
+    }
+
+    private String generateUniqueStoreSlug(String name, Long currentStoreId) {
+        String baseSlug = SlugUtils.toSlug(name);
+        String slug = baseSlug;
+        int counter = 2;
+
+        while (storeRepository.existsBySlugAndIdNot(slug, currentStoreId)) {
             slug = baseSlug + "-" + counter;
             counter++;
         }

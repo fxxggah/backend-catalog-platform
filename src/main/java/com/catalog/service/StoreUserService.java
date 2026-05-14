@@ -4,6 +4,9 @@ import com.catalog.domain.entity.Store;
 import com.catalog.domain.entity.StoreUser;
 import com.catalog.domain.enums.Role;
 import com.catalog.dto.storeuser.StoreUserResponse;
+import com.catalog.exception.BadRequestException;
+import com.catalog.exception.ErrorCode;
+import com.catalog.exception.NotFoundException;
 import com.catalog.repository.StoreRepository;
 import com.catalog.repository.StoreUserRepository;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +30,10 @@ public class StoreUserService {
         access.checkAdminAccess(userId, store.getId());
 
         StoreUser storeUser = repo.findByUserIdAndStoreIdWithUserAndStore(userId, store.getId())
-                .orElseThrow(() -> new RuntimeException("Usuário não pertence à loja"));
+                .orElseThrow(() -> new NotFoundException(
+                        ErrorCode.USER_NOT_FOUND,
+                        "Usuário não pertence à loja."
+                ));
 
         return toResponse(storeUser);
     }
@@ -51,14 +57,23 @@ public class StoreUserService {
         access.checkOwnerAccess(ownerId, store.getId());
 
         StoreUser storeUserToRemove = repo.findByUserIdAndStoreId(userIdToRemove, store.getId())
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new NotFoundException(
+                        ErrorCode.USER_NOT_FOUND,
+                        "Usuário não encontrado na loja."
+                ));
 
         if (storeUserToRemove.getRole() == Role.OWNER) {
-            throw new RuntimeException("Não pode remover o OWNER");
+            throw new BadRequestException(
+                    ErrorCode.INVALID_OPERATION,
+                    "Não é possível remover o OWNER da loja."
+            );
         }
 
         if (userIdToRemove.equals(ownerId)) {
-            throw new RuntimeException("Você não pode sair da própria loja, apenas desative a loja");
+            throw new BadRequestException(
+                    ErrorCode.INVALID_OPERATION,
+                    "Você não pode sair da própria loja. Desative a loja se necessário."
+            );
         }
 
         repo.delete(storeUserToRemove);
@@ -66,7 +81,10 @@ public class StoreUserService {
 
     private Store getStoreBySlug(String slug) {
         return storeRepository.findBySlug(slug)
-                .orElseThrow(() -> new RuntimeException("Loja não encontrada"));
+                .orElseThrow(() -> new NotFoundException(
+                        ErrorCode.STORE_NOT_FOUND,
+                        "Loja não encontrada."
+                ));
     }
 
     private StoreUserResponse toResponse(StoreUser storeUser) {

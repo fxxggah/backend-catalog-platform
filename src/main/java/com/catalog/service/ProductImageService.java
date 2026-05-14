@@ -6,6 +6,10 @@ import com.catalog.domain.entity.Store;
 import com.catalog.dto.productimage.ProductImageReorderRequest;
 import com.catalog.dto.productimage.ProductImageResponse;
 import com.catalog.dto.productimage.UploadImageRequest;
+import com.catalog.exception.BadRequestException;
+import com.catalog.exception.ErrorCode;
+import com.catalog.exception.ForbiddenException;
+import com.catalog.exception.NotFoundException;
 import com.catalog.repository.ProductImageRepository;
 import com.catalog.repository.ProductRepository;
 import com.catalog.repository.StoreRepository;
@@ -20,6 +24,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ProductImageService {
 
+    private static final int MAX_IMAGES_PER_PRODUCT = 8;
+
     private final ProductImageRepository repo;
     private final ProductRepository productRepository;
     private final StoreRepository storeRepository;
@@ -30,18 +36,22 @@ public class ProductImageService {
         Store store = getStoreBySlug(storeSlug);
 
         Product product = productRepository.findById(req.getProductId())
-                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+                .orElseThrow(() -> new NotFoundException(
+                        ErrorCode.PRODUCT_NOT_FOUND,
+                        "Produto não encontrado."
+                ));
 
         access.checkAdminAccess(userId, store.getId());
 
-        if (!product.getStore().getId().equals(store.getId())) {
-            throw new RuntimeException("Produto não pertence à loja");
-        }
+        validateProductBelongsToStore(product, store.getId());
 
         List<ProductImage> images = repo.findByProductIdOrderByPositionAsc(product.getId());
 
-        if (images.size() >= 8) {
-            throw new RuntimeException("Limite de imagens atingido");
+        if (images.size() >= MAX_IMAGES_PER_PRODUCT) {
+            throw new BadRequestException(
+                    ErrorCode.IMAGE_LIMIT_REACHED,
+                    "Limite de imagens atingido. O máximo permitido é 8 imagens por produto."
+            );
         }
 
         String imageUrl = cloudinaryService.uploadImage(req.getFile());
@@ -58,11 +68,12 @@ public class ProductImageService {
         Store store = getStoreBySlug(storeSlug);
 
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+                .orElseThrow(() -> new NotFoundException(
+                        ErrorCode.PRODUCT_NOT_FOUND,
+                        "Produto não encontrado."
+                ));
 
-        if (!product.getStore().getId().equals(store.getId())) {
-            throw new RuntimeException("Produto não pertence à loja");
-        }
+        validateProductBelongsToStore(product, store.getId());
 
         return repo.findByProductIdOrderByPositionAsc(productId)
                 .stream()
@@ -79,18 +90,22 @@ public class ProductImageService {
         Store store = getStoreBySlug(storeSlug);
 
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+                .orElseThrow(() -> new NotFoundException(
+                        ErrorCode.PRODUCT_NOT_FOUND,
+                        "Produto não encontrado."
+                ));
 
         access.checkAdminAccess(userId, store.getId());
 
-        if (!product.getStore().getId().equals(store.getId())) {
-            throw new RuntimeException("Produto não pertence à loja");
-        }
+        validateProductBelongsToStore(product, store.getId());
 
         List<ProductImage> images = repo.findByProductIdOrderByPositionAsc(productId);
 
-        if (images.size() != request.getImageIds().size()) {
-            throw new RuntimeException("Lista inválida para reordenação");
+        if (request.getImageIds() == null || images.size() != request.getImageIds().size()) {
+            throw new BadRequestException(
+                    ErrorCode.INVALID_OPERATION,
+                    "Lista inválida para reordenação."
+            );
         }
 
         Map<Long, ProductImage> imageMap = images.stream()
@@ -102,7 +117,10 @@ public class ProductImageService {
             ProductImage image = imageMap.get(imageId);
 
             if (image == null) {
-                throw new RuntimeException("Imagem inválida");
+                throw new BadRequestException(
+                        ErrorCode.INVALID_OPERATION,
+                        "Imagem inválida para reordenação."
+                );
             }
 
             image.setPosition(i + 1);
@@ -115,15 +133,16 @@ public class ProductImageService {
         Store store = getStoreBySlug(storeSlug);
 
         ProductImage image = repo.findById(imageId)
-                .orElseThrow(() -> new RuntimeException("Imagem não encontrada"));
+                .orElseThrow(() -> new NotFoundException(
+                        ErrorCode.IMAGE_NOT_FOUND,
+                        "Imagem não encontrada."
+                ));
 
         Product product = image.getProduct();
 
         access.checkAdminAccess(userId, store.getId());
 
-        if (!product.getStore().getId().equals(store.getId())) {
-            throw new RuntimeException("Imagem não pertence à loja");
-        }
+        validateProductBelongsToStore(product, store.getId());
 
         repo.delete(image);
 
@@ -138,7 +157,19 @@ public class ProductImageService {
 
     private Store getStoreBySlug(String slug) {
         return storeRepository.findBySlug(slug)
-                .orElseThrow(() -> new RuntimeException("Loja não encontrada"));
+                .orElseThrow(() -> new NotFoundException(
+                        ErrorCode.STORE_NOT_FOUND,
+                        "Loja não encontrada."
+                ));
+    }
+
+    private void validateProductBelongsToStore(Product product, Long storeId) {
+        if (!product.getStore().getId().equals(storeId)) {
+            throw new ForbiddenException(
+                    ErrorCode.RESOURCE_NOT_IN_STORE,
+                    "Produto não pertence à loja."
+            );
+        }
     }
 
     private ProductImageResponse map(ProductImage image) {

@@ -7,6 +7,10 @@ import com.catalog.domain.entity.Store;
 import com.catalog.dto.product.ProductRequest;
 import com.catalog.dto.product.ProductResponse;
 import com.catalog.dto.productimage.ProductImageResponse;
+import com.catalog.exception.BadRequestException;
+import com.catalog.exception.ErrorCode;
+import com.catalog.exception.ForbiddenException;
+import com.catalog.exception.NotFoundException;
 import com.catalog.repository.CategoryRepository;
 import com.catalog.repository.ProductRepository;
 import com.catalog.repository.StoreRepository;
@@ -43,20 +47,14 @@ public class ProductService {
 
         validatePromotionalPrice(req);
 
-        Category category = categoryRepository.findById(req.getCategoryId())
-                .filter(c -> c.getDeletedAt() == null)
-                .orElseThrow(() -> new RuntimeException("Categoria não encontrada"));
+        Category category = getActiveCategoryById(req.getCategoryId());
 
-        if (!category.getStore().getId().equals(store.getId())) {
-            throw new RuntimeException("Categoria não pertence à loja");
-        }
+        validateCategoryBelongsToStore(category, store.getId());
 
         boolean inStock = req.getInStock() != null ? req.getInStock() : true;
         boolean featured = Boolean.TRUE.equals(req.getFeatured());
 
-        if (!inStock && featured) {
-            throw new RuntimeException("Produto esgotado não pode ser marcado como destaque");
-        }
+        validateFeaturedProduct(inStock, featured);
 
         String generatedSlug = generateUniqueProductSlug(store.getId(), req.getName());
 
@@ -122,7 +120,10 @@ public class ProductService {
 
         Category category = categoryRepository
                 .findByStoreIdAndSlugAndDeletedAtIsNull(store.getId(), categorySlug)
-                .orElseThrow(() -> new RuntimeException("Categoria não encontrada"));
+                .orElseThrow(() -> new NotFoundException(
+                        ErrorCode.CATEGORY_NOT_FOUND,
+                        "Categoria não encontrada."
+                ));
 
         Page<Product> page = productRepository.findPublicByStoreIdAndCategoryIdOrderByInStockFirst(
                 store.getId(),
@@ -139,7 +140,10 @@ public class ProductService {
 
         Product product = productRepository
                 .findByStoreIdAndSlugAndDeletedAtIsNull(store.getId(), productSlug)
-                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+                .orElseThrow(() -> new NotFoundException(
+                        ErrorCode.PRODUCT_NOT_FOUND,
+                        "Produto não encontrado."
+                ));
 
         return map(product);
     }
@@ -150,7 +154,10 @@ public class ProductService {
 
         Product currentProduct = productRepository
                 .findByStoreIdAndSlugAndDeletedAtIsNull(store.getId(), productSlug)
-                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+                .orElseThrow(() -> new NotFoundException(
+                        ErrorCode.PRODUCT_NOT_FOUND,
+                        "Produto não encontrado."
+                ));
 
         Long categoryId = currentProduct.getCategory().getId();
         int safeLimit = normalizeRelatedProductsLimit(limit);
@@ -175,13 +182,9 @@ public class ProductService {
 
         access.checkAdminAccess(userId, store.getId());
 
-        Product product = productRepository.findById(id)
-                .filter(p -> p.getDeletedAt() == null)
-                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+        Product product = getActiveProductById(id);
 
-        if (!product.getStore().getId().equals(store.getId())) {
-            throw new RuntimeException("Produto não pertence à loja");
-        }
+        validateProductBelongsToStore(product, store.getId());
 
         return map(product);
     }
@@ -192,30 +195,20 @@ public class ProductService {
 
         access.checkAdminAccess(userId, store.getId());
 
-        Product product = productRepository.findById(id)
-                .filter(p -> p.getDeletedAt() == null)
-                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+        Product product = getActiveProductById(id);
 
-        if (!product.getStore().getId().equals(store.getId())) {
-            throw new RuntimeException("Produto não pertence à loja");
-        }
+        validateProductBelongsToStore(product, store.getId());
 
         validatePromotionalPrice(req);
 
-        Category category = categoryRepository.findById(req.getCategoryId())
-                .filter(c -> c.getDeletedAt() == null)
-                .orElseThrow(() -> new RuntimeException("Categoria não encontrada"));
+        Category category = getActiveCategoryById(req.getCategoryId());
 
-        if (!category.getStore().getId().equals(store.getId())) {
-            throw new RuntimeException("Categoria não pertence à loja");
-        }
+        validateCategoryBelongsToStore(category, store.getId());
 
         boolean inStock = req.getInStock() != null ? req.getInStock() : true;
         boolean featured = Boolean.TRUE.equals(req.getFeatured());
 
-        if (!inStock && featured) {
-            throw new RuntimeException("Produto esgotado não pode ser marcado como destaque");
-        }
+        validateFeaturedProduct(inStock, featured);
 
         product.setName(req.getName());
 
@@ -244,13 +237,9 @@ public class ProductService {
 
         access.checkAdminAccess(userId, store.getId());
 
-        Product product = productRepository.findById(id)
-                .filter(p -> p.getDeletedAt() == null)
-                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+        Product product = getActiveProductById(id);
 
-        if (!product.getStore().getId().equals(store.getId())) {
-            throw new RuntimeException("Produto não pertence à loja");
-        }
+        validateProductBelongsToStore(product, store.getId());
 
         product.setDeletedAt(LocalDateTime.now());
         product.setUpdatedAt(LocalDateTime.now());
@@ -285,19 +274,75 @@ public class ProductService {
                 .toList();
     }
 
+    private Product getActiveProductById(Long id) {
+        return productRepository.findById(id)
+                .filter(p -> p.getDeletedAt() == null)
+                .orElseThrow(() -> new NotFoundException(
+                        ErrorCode.PRODUCT_NOT_FOUND,
+                        "Produto não encontrado."
+                ));
+    }
+
+    private Category getActiveCategoryById(Long id) {
+        return categoryRepository.findById(id)
+                .filter(c -> c.getDeletedAt() == null)
+                .orElseThrow(() -> new NotFoundException(
+                        ErrorCode.CATEGORY_NOT_FOUND,
+                        "Categoria não encontrada."
+                ));
+    }
+
+    private Store getStoreBySlug(String storeSlug) {
+        return storeRepository.findBySlug(storeSlug)
+                .orElseThrow(() -> new NotFoundException(
+                        ErrorCode.STORE_NOT_FOUND,
+                        "Loja não encontrada."
+                ));
+    }
+
+    private void validateProductBelongsToStore(Product product, Long storeId) {
+        if (!product.getStore().getId().equals(storeId)) {
+            throw new ForbiddenException(
+                    ErrorCode.RESOURCE_NOT_IN_STORE,
+                    "Produto não pertence à loja."
+            );
+        }
+    }
+
+    private void validateCategoryBelongsToStore(Category category, Long storeId) {
+        if (!category.getStore().getId().equals(storeId)) {
+            throw new ForbiddenException(
+                    ErrorCode.RESOURCE_NOT_IN_STORE,
+                    "Categoria não pertence à loja."
+            );
+        }
+    }
+
+    private void validatePromotionalPrice(ProductRequest req) {
+        if (req.getPromotionalPrice() != null &&
+                req.getPromotionalPrice().compareTo(req.getPrice()) >= 0) {
+            throw new BadRequestException(
+                    ErrorCode.INVALID_OPERATION,
+                    "Preço promocional inválido. Ele deve ser menor que o preço original."
+            );
+        }
+    }
+
+    private void validateFeaturedProduct(boolean inStock, boolean featured) {
+        if (!inStock && featured) {
+            throw new BadRequestException(
+                    ErrorCode.INVALID_OPERATION,
+                    "Produto esgotado não pode ser marcado como destaque."
+            );
+        }
+    }
+
     private int normalizeRelatedProductsLimit(int limit) {
         if (limit <= 0) {
             return DEFAULT_RELATED_PRODUCTS_LIMIT;
         }
 
         return Math.min(limit, MAX_RELATED_PRODUCTS_LIMIT);
-    }
-
-    private void validatePromotionalPrice(ProductRequest req) {
-        if (req.getPromotionalPrice() != null &&
-                req.getPromotionalPrice().compareTo(req.getPrice()) >= 0) {
-            throw new RuntimeException("Preço promocional inválido");
-        }
     }
 
     private String generateUniqueProductSlug(Long storeId, String name) {
@@ -328,11 +373,6 @@ public class ProductService {
             slug = baseSlug + "-" + counter;
             counter++;
         }
-    }
-
-    private Store getStoreBySlug(String storeSlug) {
-        return storeRepository.findBySlug(storeSlug)
-                .orElseThrow(() -> new RuntimeException("Loja não encontrada"));
     }
 
     private ProductResponse map(Product product) {

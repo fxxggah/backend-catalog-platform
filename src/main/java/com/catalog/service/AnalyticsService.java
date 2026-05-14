@@ -8,6 +8,8 @@ import com.catalog.dto.analytics.AnalyticsEventRequest;
 import com.catalog.dto.analytics.AnalyticsSummaryResponse;
 import com.catalog.dto.analytics.DailyVisitsResponse;
 import com.catalog.dto.analytics.TopProductAnalyticsResponse;
+import com.catalog.exception.ErrorCode;
+import com.catalog.exception.NotFoundException;
 import com.catalog.repository.AnalyticsEventRepository;
 import com.catalog.repository.ProductRepository;
 import com.catalog.repository.StoreRepository;
@@ -47,7 +49,10 @@ public class AnalyticsService {
 
         Product product = productRepository
                 .findByStoreIdAndSlugAndDeletedAtIsNull(store.getId(), productSlug)
-                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+                .orElseThrow(() -> new NotFoundException(
+                        ErrorCode.PRODUCT_NOT_FOUND,
+                        "Produto não encontrado."
+                ));
 
         saveEvent(store, product, AnalyticsEventType.PRODUCT_VIEW, request);
     }
@@ -179,7 +184,10 @@ public class AnalyticsService {
 
     private Store getStoreBySlug(String storeSlug) {
         return storeRepository.findBySlug(storeSlug)
-                .orElseThrow(() -> new RuntimeException("Loja não encontrada"));
+                .orElseThrow(() -> new NotFoundException(
+                        ErrorCode.STORE_NOT_FOUND,
+                        "Loja não encontrada."
+                ));
     }
 
     private int normalizeLimit(int limit) {

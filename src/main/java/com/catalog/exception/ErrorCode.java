@@ -1,4 +1,4 @@
-package com.catalog.domain.enums;
+package com.catalog.exception;
 
 public enum ErrorCode {
     STORE_NOT_FOUND,
