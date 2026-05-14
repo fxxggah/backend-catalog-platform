@@ -1,9 +1,12 @@
 package com.catalog.service.auth;
 
+import com.catalog.exception.ErrorCode;
+import com.catalog.exception.UnauthorizedException;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-import io.jsonwebtoken.JwtException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -50,10 +53,31 @@ public class JwtService {
     }
 
     private Claims getClaims(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
+        if (token == null || token.isBlank()) {
+            throw new UnauthorizedException(
+                    ErrorCode.UNAUTHORIZED,
+                    "Token não enviado."
+            );
+        }
+
+        try {
+            return Jwts.parserBuilder()
+                    .setSigningKey(getSigningKey())
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+
+        } catch (ExpiredJwtException e) {
+            throw new UnauthorizedException(
+                    ErrorCode.TOKEN_EXPIRED,
+                    "Token expirado."
+            );
+
+        } catch (JwtException | IllegalArgumentException e) {
+            throw new UnauthorizedException(
+                    ErrorCode.INVALID_TOKEN,
+                    "Token inválido."
+            );
+        }
     }
 }
