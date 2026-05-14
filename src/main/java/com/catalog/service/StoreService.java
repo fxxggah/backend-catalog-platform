@@ -83,7 +83,18 @@ public class StoreService {
 
         access.checkOwnerAccess(userId, store.getId());
 
+        boolean nameChanged = !store.getName().equals(req.getName());
+
         store.setName(req.getName());
+
+        if (nameChanged) {
+            String newSlug = generateUniqueStoreSlug(req.getName(), store.getId());
+
+            if (!newSlug.equals(store.getSlug())) {
+                store.setSlug(newSlug);
+            }
+        }
+
         store.setLogo(req.getLogo());
         store.setFavicon(req.getFavicon());
         store.setPrimaryColor(req.getPrimaryColor());
@@ -129,6 +140,19 @@ public class StoreService {
         storeRepository.save(store);
     }
 
+    private String generateUniqueStoreSlug(String name, Long currentStoreId) {
+        String baseSlug = SlugUtils.toSlug(name);
+        String slug = baseSlug;
+        int counter = 2;
+
+        while (storeRepository.existsBySlugAndIdNot(slug, currentStoreId)) {
+            slug = baseSlug + "-" + counter;
+            counter++;
+        }
+
+        return slug;
+    }
+
     private Store getStoreBySlug(String storeSlug) {
         return storeRepository.findBySlug(storeSlug)
                 .orElseThrow(() -> new RuntimeException("Loja não encontrada"));
@@ -171,4 +195,5 @@ public class StoreService {
                 .createdAt(s.getCreatedAt())
                 .build();
     }
+
 }

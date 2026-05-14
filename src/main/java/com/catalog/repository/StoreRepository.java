@@ -18,4 +18,5 @@ public interface StoreRepository extends JpaRepository<Store, Long> {
 
     boolean existsBySlug(String slug);
 
+    boolean existsBySlugAndIdNot(String slug, Long id);
 }
