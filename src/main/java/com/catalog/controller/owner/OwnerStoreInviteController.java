@@ -1,6 +1,7 @@
 package com.catalog.controller.owner;
 
 import com.catalog.annotation.CurrentUser;
+import com.catalog.dto.storeinvite.StoreInviteCreateResponse;
 import com.catalog.dto.storeinvite.StoreInviteRequest;
 import com.catalog.dto.storeinvite.StoreInviteResponse;
 import com.catalog.service.StoreInviteService;
@@ -21,7 +22,7 @@ public class OwnerStoreInviteController {
     private final StoreInviteService storeInviteService;
 
     @PostMapping
-    public ResponseEntity<StoreInviteResponse> invite(
+    public ResponseEntity<StoreInviteCreateResponse> invite(
             @PathVariable String storeSlug,
             @Valid @RequestBody StoreInviteRequest request,
             @CurrentUser Long userId) {

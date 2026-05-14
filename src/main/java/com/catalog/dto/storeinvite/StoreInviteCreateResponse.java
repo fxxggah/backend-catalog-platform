@@ -8,10 +8,11 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class StoreInviteResponse {
+public class StoreInviteCreateResponse {
 
     private Long id;
     private String email;
+    private String token;
     private LocalDateTime expiresAt;
     private LocalDateTime usedAt;
 }

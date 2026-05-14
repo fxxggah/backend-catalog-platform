@@ -1,6 +1,7 @@
 package com.catalog.service;
 
 import com.catalog.domain.entity.Store;
+import com.catalog.dto.storeinvite.StoreInviteCreateResponse;
 import com.catalog.domain.entity.StoreInvite;
 import com.catalog.domain.entity.StoreUser;
 import com.catalog.domain.entity.User;
@@ -10,6 +11,7 @@ import com.catalog.dto.storeinvite.StoreInviteResponse;
 import com.catalog.repository.StoreInviteRepository;
 import com.catalog.repository.StoreRepository;
 import com.catalog.repository.StoreUserRepository;
+import com.catalog.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -24,9 +26,10 @@ public class StoreInviteService {
     private final StoreInviteRepository repo;
     private final StoreRepository storeRepository;
     private final StoreUserRepository storeUserRepository;
+    private final UserRepository userRepository;
     private final AccessControlService access;
 
-    public StoreInviteResponse invite(String storeSlug, StoreInviteRequest req, Long userId) {
+    public StoreInviteCreateResponse  invite(String storeSlug, StoreInviteRequest req, Long userId) {
 
         Store store = getStoreBySlug(storeSlug);
 
@@ -45,17 +48,41 @@ public class StoreInviteService {
         invite.setStore(store);
         invite.setEmail(req.getEmail());
         invite.setToken(UUID.randomUUID().toString());
+        invite.setCreatedBy(userId);
         invite.setExpiresAt(LocalDateTime.now().plusHours(24));
         invite.setCreatedAt(LocalDateTime.now());
 
-        return map(repo.save(invite));
+        return mapCreated(repo.save(invite));
     }
 
-    public void accept(String token, User user) {
+    public void accept(String token, Long userId) {
 
         StoreInvite invite = repo
-                .findByTokenAndUsedAtIsNullAndExpiresAtAfter(token, LocalDateTime.now())
+                .findByTokenAndUsedAtIsNullAndExpiresAtAfter(
+                        token,
+                        LocalDateTime.now()
+                )
                 .orElseThrow(() -> new RuntimeException("Convite inválido"));
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        if (!user.getEmail().equalsIgnoreCase(invite.getEmail())) {
+            throw new RuntimeException(
+                    "Este convite pertence a outro email"
+            );
+        }
+
+        boolean alreadyMember = storeUserRepository.existsByUserIdAndStoreId(
+                user.getId(),
+                invite.getStore().getId()
+        );
+
+        if (alreadyMember) {
+            throw new RuntimeException(
+                    "Usuário já pertence à loja"
+            );
+        }
 
         StoreUser su = new StoreUser();
         su.setStore(invite.getStore());
@@ -66,6 +93,7 @@ public class StoreInviteService {
         storeUserRepository.save(su);
 
         invite.setUsedAt(LocalDateTime.now());
+
         repo.save(invite);
     }
 
@@ -114,9 +142,19 @@ public class StoreInviteService {
         return StoreInviteResponse.builder()
                 .id(i.getId())
                 .email(i.getEmail())
-                .token(i.getToken()) // 🔥 ADICIONAR
                 .expiresAt(i.getExpiresAt())
                 .usedAt(i.getUsedAt())
                 .build();
     }
+
+    private StoreInviteCreateResponse mapCreated(StoreInvite i) {
+        return StoreInviteCreateResponse.builder()
+                .id(i.getId())
+                .email(i.getEmail())
+                .token(i.getToken())
+                .expiresAt(i.getExpiresAt())
+                .usedAt(i.getUsedAt())
+                .build();
+    }
+
 }

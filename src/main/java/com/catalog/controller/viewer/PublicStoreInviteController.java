@@ -29,10 +29,7 @@ public class PublicStoreInviteController {
             @PathVariable String token,
             @CurrentUser Long userId) {
 
-        User user = new User();
-        user.setId(userId);
-
-        storeInviteService.accept(token, user);
+        storeInviteService.accept(token, userId);
 
         return ResponseEntity.noContent().build();
     }
