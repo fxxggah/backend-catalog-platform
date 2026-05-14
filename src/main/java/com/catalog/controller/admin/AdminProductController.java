@@ -1,12 +1,12 @@
 package com.catalog.controller.admin;
 
 import com.catalog.annotation.CurrentUser;
+import com.catalog.dto.common.PagedResponse;
 import com.catalog.dto.product.ProductRequest;
 import com.catalog.dto.product.ProductResponse;
 import com.catalog.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -64,14 +64,16 @@ public class AdminProductController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<ProductResponse>> list(
+    public ResponseEntity<PagedResponse<ProductResponse>> list(
             @PathVariable String storeSlug,
             @RequestParam(required = false) String search,
             Pageable pageable,
             @CurrentUser Long userId) {
 
         return ResponseEntity.ok(
-                productService.listAdmin(storeSlug, search, pageable, userId)
+                PagedResponse.from(
+                        productService.listAdmin(storeSlug, search, pageable, userId)
+                )
         );
     }
 }

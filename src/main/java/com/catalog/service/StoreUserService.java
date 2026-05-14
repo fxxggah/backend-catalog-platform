@@ -8,6 +8,7 @@ import com.catalog.repository.StoreRepository;
 import com.catalog.repository.StoreUserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -19,25 +20,31 @@ public class StoreUserService {
     private final StoreRepository storeRepository;
     private final AccessControlService access;
 
+    @Transactional(readOnly = true)
     public StoreUserResponse getCurrentUserInStore(String storeSlug, Long userId) {
         Store store = getStoreBySlug(storeSlug);
 
-        StoreUser storeUser = access.getStoreUserOrThrow(userId, store.getId());
+        access.checkAdminAccess(userId, store.getId());
+
+        StoreUser storeUser = repo.findByUserIdAndStoreIdWithUserAndStore(userId, store.getId())
+                .orElseThrow(() -> new RuntimeException("Usuário não pertence à loja"));
 
         return toResponse(storeUser);
     }
 
+    @Transactional(readOnly = true)
     public List<StoreUserResponse> listByStore(String storeSlug, Long userId) {
         Store store = getStoreBySlug(storeSlug);
 
         access.checkAdminAccess(userId, store.getId());
 
-        return repo.findByStoreId(store.getId())
+        return repo.findByStoreIdWithUserAndStore(store.getId())
                 .stream()
                 .map(this::toResponse)
                 .toList();
     }
 
+    @Transactional
     public void removeUser(String storeSlug, Long userIdToRemove, Long ownerId) {
         Store store = getStoreBySlug(storeSlug);
 
@@ -69,7 +76,6 @@ public class StoreUserService {
                 .storeId(storeUser.getStore().getId())
                 .name(storeUser.getUser().getName())
                 .email(storeUser.getUser().getEmail())
-                .pictureUrl(storeUser.getUser().getPictureUrl())
                 .role(storeUser.getRole())
                 .createdAt(storeUser.getCreatedAt())
                 .build();

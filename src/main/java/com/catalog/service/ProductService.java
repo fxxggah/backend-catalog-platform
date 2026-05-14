@@ -16,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Comparator;
@@ -34,6 +35,7 @@ public class ProductService {
     private final StoreRepository storeRepository;
     private final AccessControlService access;
 
+    @Transactional
     public ProductResponse create(String storeSlug, ProductRequest req, Long userId) {
         Store store = getStoreBySlug(storeSlug);
 
@@ -74,6 +76,7 @@ public class ProductService {
         return map(productRepository.save(product));
     }
 
+    @Transactional(readOnly = true)
     public Page<ProductResponse> listAdmin(String storeSlug, String search, Pageable pageable, Long userId) {
         Store store = getStoreBySlug(storeSlug);
 
@@ -94,6 +97,7 @@ public class ProductService {
         return page.map(this::map);
     }
 
+    @Transactional(readOnly = true)
     public Page<ProductResponse> listPublic(String storeSlug, String search, Pageable pageable) {
         Store store = getStoreBySlug(storeSlug);
 
@@ -112,6 +116,7 @@ public class ProductService {
         return page.map(this::map);
     }
 
+    @Transactional(readOnly = true)
     public Page<ProductResponse> listByCategory(String storeSlug, String categorySlug, Pageable pageable) {
         Store store = getStoreBySlug(storeSlug);
 
@@ -128,6 +133,7 @@ public class ProductService {
         return page.map(this::map);
     }
 
+    @Transactional(readOnly = true)
     public ProductResponse getBySlug(String storeSlug, String productSlug) {
         Store store = getStoreBySlug(storeSlug);
 
@@ -138,6 +144,7 @@ public class ProductService {
         return map(product);
     }
 
+    @Transactional(readOnly = true)
     public List<ProductResponse> getRelatedProducts(String storeSlug, String productSlug, int limit) {
         Store store = getStoreBySlug(storeSlug);
 
@@ -162,6 +169,7 @@ public class ProductService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public ProductResponse getById(String storeSlug, Long id, Long userId) {
         Store store = getStoreBySlug(storeSlug);
 
@@ -178,6 +186,7 @@ public class ProductService {
         return map(product);
     }
 
+    @Transactional
     public ProductResponse update(String storeSlug, Long id, ProductRequest req, Long userId) {
         Store store = getStoreBySlug(storeSlug);
 
@@ -229,6 +238,7 @@ public class ProductService {
         return map(productRepository.save(product));
     }
 
+    @Transactional
     public void delete(String storeSlug, Long id, Long userId) {
         Store store = getStoreBySlug(storeSlug);
 
@@ -249,6 +259,7 @@ public class ProductService {
         productRepository.save(product);
     }
 
+    @Transactional(readOnly = true)
     public List<ProductResponse> getFeaturedProducts(String storeSlug) {
         Store store = getStoreBySlug(storeSlug);
 
@@ -261,6 +272,7 @@ public class ProductService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public List<ProductResponse> getNewArrivals(String storeSlug) {
         Store store = getStoreBySlug(storeSlug);
 
@@ -335,18 +347,23 @@ public class ProductService {
                 .featured(product.getFeatured())
                 .createdAt(product.getCreatedAt())
                 .categoryId(product.getCategory().getId())
-                .images(
-                        product.getImages() == null
-                                ? List.of()
-                                : product.getImages().stream()
-                                .sorted(Comparator.comparing(ProductImage::getPosition))
-                                .map(img -> ProductImageResponse.builder()
-                                        .id(img.getId())
-                                        .imageUrl(img.getImageUrl())
-                                        .position(img.getPosition())
-                                        .build())
-                                .toList()
-                )
+                .images(mapImages(product))
                 .build();
+    }
+
+    private List<ProductImageResponse> mapImages(Product product) {
+        if (product.getImages() == null || product.getImages().isEmpty()) {
+            return List.of();
+        }
+
+        return product.getImages()
+                .stream()
+                .sorted(Comparator.comparing(ProductImage::getPosition))
+                .map(img -> ProductImageResponse.builder()
+                        .id(img.getId())
+                        .imageUrl(img.getImageUrl())
+                        .position(img.getPosition())
+                        .build())
+                .toList();
     }
 }

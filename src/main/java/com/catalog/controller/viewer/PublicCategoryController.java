@@ -1,12 +1,11 @@
 package com.catalog.controller.viewer;
 
-
 import com.catalog.dto.category.CategoryResponse;
+import com.catalog.dto.common.PagedResponse;
 import com.catalog.dto.product.ProductResponse;
 import com.catalog.service.CategoryService;
 import com.catalog.service.ProductService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,13 +28,15 @@ public class PublicCategoryController {
     }
 
     @GetMapping("/{categorySlug}/products")
-    public ResponseEntity<Page<ProductResponse>> listProductsByCategory(
+    public ResponseEntity<PagedResponse<ProductResponse>> listProductsByCategory(
             @PathVariable String storeSlug,
             @PathVariable String categorySlug,
             Pageable pageable) {
 
         return ResponseEntity.ok(
-                productService.listByCategory(storeSlug, categorySlug, pageable)
+                PagedResponse.from(
+                        productService.listByCategory(storeSlug, categorySlug, pageable)
+                )
         );
     }
 }

@@ -17,7 +17,6 @@ public class StoreUserResponse {
 
     private String name;
     private String email;
-    private String pictureUrl;
 
     private Role role;
     private LocalDateTime createdAt;

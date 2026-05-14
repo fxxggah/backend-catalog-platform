@@ -1,9 +1,9 @@
 package com.catalog.controller.viewer;
 
+import com.catalog.dto.common.PagedResponse;
 import com.catalog.dto.product.ProductResponse;
 import com.catalog.service.ProductService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,13 +18,15 @@ public class PublicProductController {
     private final ProductService productService;
 
     @GetMapping
-    public ResponseEntity<Page<ProductResponse>> list(
+    public ResponseEntity<PagedResponse<ProductResponse>> list(
             @PathVariable String storeSlug,
             @RequestParam(required = false) String search,
             Pageable pageable) {
 
         return ResponseEntity.ok(
-                productService.listPublic(storeSlug, search, pageable)
+                PagedResponse.from(
+                        productService.listPublic(storeSlug, search, pageable)
+                )
         );
     }
 

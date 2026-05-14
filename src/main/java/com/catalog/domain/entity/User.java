@@ -28,9 +28,6 @@ public class User {
     @Column(nullable = false, unique = true, length = 250)
     private String email;
 
-    @Column(length = 500)
-    private String pictureUrl;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
     private Provider provider;

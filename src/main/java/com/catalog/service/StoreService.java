@@ -11,6 +11,7 @@ import com.catalog.repository.StoreUserRepository;
 import com.catalog.util.SlugUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -23,6 +24,7 @@ public class StoreService {
     private final StoreUserRepository storeUserRepository;
     private final AccessControlService access;
 
+    @Transactional
     public StoreResponse create(StoreRequest req, Long userId) {
         String generatedSlug = generateUniqueStoreSlug(req.getName());
 
@@ -49,8 +51,10 @@ public class StoreService {
 
         StoreUser su = new StoreUser();
         su.setStore(store);
+
         User user = new User();
         user.setId(userId);
+
         su.setUser(user);
         su.setRole(Role.OWNER);
         su.setCreatedAt(LocalDateTime.now());
@@ -60,6 +64,7 @@ public class StoreService {
         return map(store);
     }
 
+    @Transactional(readOnly = true)
     public StoreResponse getBySlug(String storeSlug) {
         Store s = storeRepository.findBySlug(storeSlug)
                 .orElseThrow(() -> new RuntimeException("Loja não encontrada"));
@@ -67,15 +72,16 @@ public class StoreService {
         return map(s);
     }
 
+    @Transactional(readOnly = true)
     public List<StoreResponse> getUserStores(Long userId) {
-        return storeUserRepository.findByUserId(userId)
+        return storeUserRepository.findByUserIdWithStore(userId)
                 .stream()
                 .map(su -> map(su.getStore()))
                 .toList();
     }
 
+    @Transactional
     public StoreResponse update(String storeSlug, StoreRequest req, Long userId) {
-
         Store store = getStoreBySlug(storeSlug);
 
         access.checkOwnerAccess(userId, store.getId());
@@ -110,6 +116,7 @@ public class StoreService {
         return map(storeRepository.save(store));
     }
 
+    @Transactional
     public void deactivate(String storeSlug, Long userId) {
         Store store = getStoreBySlug(storeSlug);
 
@@ -122,6 +129,7 @@ public class StoreService {
         storeRepository.save(store);
     }
 
+    @Transactional
     public void activate(String storeSlug, Long userId) {
         Store store = getStoreBySlug(storeSlug);
 
@@ -194,5 +202,4 @@ public class StoreService {
                 .createdAt(s.getCreatedAt())
                 .build();
     }
-
 }
