@@ -6,7 +6,7 @@ import com.catalog.dto.auth.AuthResponse;
 import com.catalog.dto.auth.GoogleUserData;
 import com.catalog.dto.user.UserResponse;
 import com.catalog.exception.BadRequestException;
-import com.catalog.exception.ErrorCode;
+import com.catalog.domain.enums.ErrorCode;
 import com.catalog.provider.GoogleTokenVerifier;
 import com.catalog.repository.UserRepository;
 import lombok.RequiredArgsConstructor;

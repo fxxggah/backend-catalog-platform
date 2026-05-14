@@ -1,5 +1,7 @@
 package com.catalog.exception;
 
+import com.catalog.domain.enums.ErrorCode;
+import com.catalog.dto.exception.ApiErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;

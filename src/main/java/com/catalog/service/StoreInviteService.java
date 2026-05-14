@@ -10,7 +10,7 @@ import com.catalog.dto.storeinvite.StoreInviteRequest;
 import com.catalog.dto.storeinvite.StoreInviteResponse;
 import com.catalog.exception.BadRequestException;
 import com.catalog.exception.ConflictException;
-import com.catalog.exception.ErrorCode;
+import com.catalog.domain.enums.ErrorCode;
 import com.catalog.exception.ForbiddenException;
 import com.catalog.exception.NotFoundException;
 import com.catalog.repository.StoreInviteRepository;

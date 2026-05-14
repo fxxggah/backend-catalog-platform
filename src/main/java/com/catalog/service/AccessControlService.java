@@ -2,7 +2,7 @@ package com.catalog.service;
 
 import com.catalog.domain.entity.StoreUser;
 import com.catalog.domain.enums.Role;
-import com.catalog.exception.ErrorCode;
+import com.catalog.domain.enums.ErrorCode;
 import com.catalog.exception.ForbiddenException;
 import com.catalog.repository.StoreUserRepository;
 import lombok.RequiredArgsConstructor;

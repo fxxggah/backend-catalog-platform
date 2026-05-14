@@ -1,6 +1,6 @@
 package com.catalog.service.auth;
 
-import com.catalog.exception.ErrorCode;
+import com.catalog.domain.enums.ErrorCode;
 import com.catalog.exception.UnauthorizedException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;

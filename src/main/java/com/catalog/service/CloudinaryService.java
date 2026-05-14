@@ -1,6 +1,6 @@
 package com.catalog.service;
 
-import com.catalog.exception.ErrorCode;
+import com.catalog.domain.enums.ErrorCode;
 import com.catalog.exception.BadRequestException;
 import com.cloudinary.Cloudinary;
 import lombok.RequiredArgsConstructor;

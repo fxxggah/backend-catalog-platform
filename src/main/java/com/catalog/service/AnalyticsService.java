@@ -8,7 +8,7 @@ import com.catalog.dto.analytics.AnalyticsEventRequest;
 import com.catalog.dto.analytics.AnalyticsSummaryResponse;
 import com.catalog.dto.analytics.DailyVisitsResponse;
 import com.catalog.dto.analytics.TopProductAnalyticsResponse;
-import com.catalog.exception.ErrorCode;
+import com.catalog.domain.enums.ErrorCode;
 import com.catalog.exception.NotFoundException;
 import com.catalog.repository.AnalyticsEventRepository;
 import com.catalog.repository.ProductRepository;

@@ -4,7 +4,7 @@ import com.catalog.domain.entity.Category;
 import com.catalog.domain.entity.Store;
 import com.catalog.dto.category.CategoryRequest;
 import com.catalog.dto.category.CategoryResponse;
-import com.catalog.exception.ErrorCode;
+import com.catalog.domain.enums.ErrorCode;
 import com.catalog.exception.ForbiddenException;
 import com.catalog.exception.NotFoundException;
 import com.catalog.repository.CategoryRepository;

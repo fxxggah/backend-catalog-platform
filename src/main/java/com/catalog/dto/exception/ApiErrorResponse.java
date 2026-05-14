@@ -1,4 +1,4 @@
-package com.catalog.exception;
+package com.catalog.dto.exception;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;

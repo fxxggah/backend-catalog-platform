@@ -6,7 +6,7 @@ import com.catalog.domain.entity.User;
 import com.catalog.domain.enums.Role;
 import com.catalog.dto.store.StoreRequest;
 import com.catalog.dto.store.StoreResponse;
-import com.catalog.exception.ErrorCode;
+import com.catalog.domain.enums.ErrorCode;
 import com.catalog.exception.NotFoundException;
 import com.catalog.repository.StoreRepository;
 import com.catalog.repository.StoreUserRepository;

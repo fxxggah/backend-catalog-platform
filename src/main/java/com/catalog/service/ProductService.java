@@ -8,7 +8,7 @@ import com.catalog.dto.product.ProductRequest;
 import com.catalog.dto.product.ProductResponse;
 import com.catalog.dto.productimage.ProductImageResponse;
 import com.catalog.exception.BadRequestException;
-import com.catalog.exception.ErrorCode;
+import com.catalog.domain.enums.ErrorCode;
 import com.catalog.exception.ForbiddenException;
 import com.catalog.exception.NotFoundException;
 import com.catalog.repository.CategoryRepository;
