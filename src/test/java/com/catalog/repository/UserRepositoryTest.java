@@ -5,7 +5,7 @@ import com.catalog.domain.enums.Provider;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 
 import java.time.LocalDateTime;
 
@@ -19,9 +19,9 @@ class UserRepositoryTest {
     private UserRepository userRepository;
 
     @Test
-    @DisplayName("Deve encontrar usuário pelo email")
+    @DisplayName("Deve encontrar usuário pelo e-mail")
     void deveEncontrarUsuarioPorEmail() {
-        User user = criarUsuario("Gabriel", "gabriel@email.com", Provider.GOOGLE, true);
+        User user = criarUsuario("Gabriel", "gabriel@email.com", true);
         userRepository.save(user);
 
         var result = userRepository.findByEmail("gabriel@email.com");
@@ -31,21 +31,21 @@ class UserRepositoryTest {
     }
 
     @Test
-    @DisplayName("Deve encontrar usuário ativo pelo email")
+    @DisplayName("Deve encontrar usuário ativo pelo e-mail")
     void deveEncontrarUsuarioAtivoPorEmail() {
-        User user = criarUsuario("Gabriel", "ativo@email.com", Provider.GOOGLE, true);
+        User user = criarUsuario("Gabriel", "ativo@email.com", true);
         userRepository.save(user);
 
         var result = userRepository.findByEmailAndActiveTrue("ativo@email.com");
 
         assertThat(result).isPresent();
-        assertThat(result.get().isActive()).isTrue();
+        assertThat(result.get().getActive()).isTrue();
     }
 
     @Test
-    @DisplayName("Não deve encontrar usuário inativo pelo email quando buscar apenas ativos")
-    void naoDeveEncontrarUsuarioInativoPorEmail() {
-        User user = criarUsuario("Gabriel", "inativo@email.com", Provider.GOOGLE, false);
+    @DisplayName("Não deve encontrar usuário inativo ao buscar apenas ativos")
+    void naoDeveEncontrarUsuarioInativoAoBuscarApenasAtivos() {
+        User user = criarUsuario("Gabriel", "inativo@email.com", false);
         userRepository.save(user);
 
         var result = userRepository.findByEmailAndActiveTrue("inativo@email.com");
@@ -54,9 +54,9 @@ class UserRepositoryTest {
     }
 
     @Test
-    @DisplayName("Deve encontrar usuário pelo email e provider")
+    @DisplayName("Deve encontrar usuário pelo e-mail e provider")
     void deveEncontrarUsuarioPorEmailEProvider() {
-        User user = criarUsuario("Gabriel", "google@email.com", Provider.GOOGLE, true);
+        User user = criarUsuario("Gabriel", "google@email.com", true);
         userRepository.save(user);
 
         var result = userRepository.findByEmailAndProvider("google@email.com", Provider.GOOGLE);
@@ -65,14 +65,14 @@ class UserRepositoryTest {
         assertThat(result.get().getProvider()).isEqualTo(Provider.GOOGLE);
     }
 
-    private User criarUsuario(String name, String email, Provider provider, boolean active) {
-        return User.builder()
-                .name(name)
-                .email(email)
-                .provider(provider)
-                .active(active)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .build();
+    private User criarUsuario(String name, String email, boolean active) {
+        User user = new User();
+        user.setName(name);
+        user.setEmail(email);
+        user.setProvider(Provider.GOOGLE);
+        user.setActive(active);
+        user.setCreatedAt(LocalDateTime.now());
+        user.setUpdatedAt(LocalDateTime.now());
+        return user;
     }
 }
