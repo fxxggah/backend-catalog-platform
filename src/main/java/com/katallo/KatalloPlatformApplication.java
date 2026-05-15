@@ -5,7 +5,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class CatalogPlatformApplication {
+public class KatalloPlatformApplication {
 
 	public static void main(String[] args) {
 
@@ -24,6 +24,6 @@ public class CatalogPlatformApplication {
 		System.setProperty("MY_CLIENT_ID", dotenv.get("MY_CLIENT_ID"));
 		System.setProperty("JWT_SECRET", dotenv.get("JWT_SECRET"));
 
-		SpringApplication.run(CatalogPlatformApplication.class, args);
+		SpringApplication.run(KatalloPlatformApplication.class, args);
 	}
 }
