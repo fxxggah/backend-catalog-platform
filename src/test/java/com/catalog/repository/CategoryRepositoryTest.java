@@ -2,10 +2,11 @@ package com.catalog.repository;
 
 import com.catalog.domain.entity.Category;
 import com.catalog.domain.entity.Store;
+import com.catalog.domain.enums.StoreTemplate;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 
 import java.time.LocalDateTime;
 
@@ -24,11 +25,11 @@ class CategoryRepositoryTest {
     @Test
     @DisplayName("Deve listar categorias por loja")
     void deveListarCategoriasPorLoja() {
-        Store store = storeRepository.save(criarLoja("loja-1"));
-        Store otherStore = storeRepository.save(criarLoja("loja-2"));
+        Store store = storeRepository.save(criarLoja("loja-categorias"));
+        Store outraStore = storeRepository.save(criarLoja("outra-loja-categorias"));
 
         categoryRepository.save(criarCategoria("Vestidos", "vestidos", store, null));
-        categoryRepository.save(criarCategoria("Calçados", "calcados", otherStore, null));
+        categoryRepository.save(criarCategoria("Calçados", "calcados", outraStore, null));
 
         var result = categoryRepository.findByStoreId(store.getId());
 
@@ -39,7 +40,7 @@ class CategoryRepositoryTest {
     @Test
     @DisplayName("Deve encontrar categoria por loja e slug")
     void deveEncontrarCategoriaPorLojaESlug() {
-        Store store = storeRepository.save(criarLoja("loja-1"));
+        Store store = storeRepository.save(criarLoja("loja-categoria-slug"));
         categoryRepository.save(criarCategoria("Vestidos", "vestidos", store, null));
 
         var result = categoryRepository.findByStoreIdAndSlug(store.getId(), "vestidos");
@@ -51,7 +52,7 @@ class CategoryRepositoryTest {
     @Test
     @DisplayName("Deve listar apenas categorias não deletadas")
     void deveListarApenasCategoriasNaoDeletadas() {
-        Store store = storeRepository.save(criarLoja("loja-1"));
+        Store store = storeRepository.save(criarLoja("loja-categorias-ativas"));
 
         categoryRepository.save(criarCategoria("Ativa", "ativa", store, null));
         categoryRepository.save(criarCategoria("Deletada", "deletada", store, LocalDateTime.now()));
@@ -65,7 +66,7 @@ class CategoryRepositoryTest {
     @Test
     @DisplayName("Deve encontrar categoria não deletada por loja e slug")
     void deveEncontrarCategoriaNaoDeletadaPorLojaESlug() {
-        Store store = storeRepository.save(criarLoja("loja-1"));
+        Store store = storeRepository.save(criarLoja("loja-categoria-nao-deletada"));
         categoryRepository.save(criarCategoria("Ativa", "ativa", store, null));
 
         var result = categoryRepository.findByStoreIdAndSlugAndDeletedAtIsNull(store.getId(), "ativa");
@@ -74,9 +75,9 @@ class CategoryRepositoryTest {
     }
 
     @Test
-    @DisplayName("Não deve encontrar categoria deletada por loja e slug quando buscar apenas ativas")
-    void naoDeveEncontrarCategoriaDeletadaPorLojaESlug() {
-        Store store = storeRepository.save(criarLoja("loja-1"));
+    @DisplayName("Não deve encontrar categoria deletada ao buscar apenas não deletadas")
+    void naoDeveEncontrarCategoriaDeletadaAoBuscarApenasNaoDeletadas() {
+        Store store = storeRepository.save(criarLoja("loja-categoria-deletada"));
         categoryRepository.save(criarCategoria("Deletada", "deletada", store, LocalDateTime.now()));
 
         var result = categoryRepository.findByStoreIdAndSlugAndDeletedAtIsNull(store.getId(), "deletada");
@@ -87,7 +88,7 @@ class CategoryRepositoryTest {
     @Test
     @DisplayName("Deve verificar se existe categoria por loja e slug")
     void deveVerificarSeExisteCategoriaPorLojaESlug() {
-        Store store = storeRepository.save(criarLoja("loja-1"));
+        Store store = storeRepository.save(criarLoja("loja-exists-categoria"));
         categoryRepository.save(criarCategoria("Vestidos", "vestidos", store, null));
 
         boolean exists = categoryRepository.existsByStoreIdAndSlug(store.getId(), "vestidos");
@@ -96,24 +97,23 @@ class CategoryRepositoryTest {
     }
 
     private Store criarLoja(String slug) {
-        return Store.builder()
-                .name("Loja " + slug)
-                .slug(slug)
-                .active(true)
-                .template("minimal")
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .build();
+        Store store = new Store();
+        store.setName("Loja " + slug);
+        store.setSlug(slug);
+        store.setTemplate(StoreTemplate.MINIMAL);
+        store.setActive(true);
+        store.setCreatedAt(LocalDateTime.now());
+        return store;
     }
 
     private Category criarCategoria(String name, String slug, Store store, LocalDateTime deletedAt) {
-        return Category.builder()
-                .name(name)
-                .slug(slug)
-                .store(store)
-                .deletedAt(deletedAt)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .build();
+        Category category = new Category();
+        category.setName(name);
+        category.setSlug(slug);
+        category.setStore(store);
+        category.setDeletedAt(deletedAt);
+        category.setCreatedAt(LocalDateTime.now());
+        category.setUpdatedAt(LocalDateTime.now());
+        return category;
     }
 }
