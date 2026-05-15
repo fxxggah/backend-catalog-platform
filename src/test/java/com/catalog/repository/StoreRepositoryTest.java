@@ -1,6 +1,7 @@
 package com.catalog.repository;
 
 import com.catalog.domain.entity.Store;
+import com.catalog.domain.enums.StoreTemplate;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,12 +39,12 @@ class StoreRepositoryTest {
         var result = storeRepository.findBySlugAndActiveTrue("loja-ativa");
 
         assertThat(result).isPresent();
-        assertThat(result.get().isActive()).isTrue();
+        assertThat(result.get().getActive()).isTrue();
     }
 
     @Test
     @DisplayName("Não deve encontrar loja inativa ao buscar por slug ativo")
-    void naoDeveEncontrarLojaInativaPorSlugAtivo() {
+    void naoDeveEncontrarLojaInativaAoBuscarPorSlugAtivo() {
         Store store = criarLoja("Loja Inativa", "loja-inativa", false);
         storeRepository.save(store);
 
@@ -55,21 +56,21 @@ class StoreRepositoryTest {
     @Test
     @DisplayName("Deve listar apenas lojas ativas")
     void deveListarApenasLojasAtivas() {
-        storeRepository.save(criarLoja("Loja Ativa", "ativa", true));
-        storeRepository.save(criarLoja("Loja Inativa", "inativa", false));
+        storeRepository.save(criarLoja("Loja Ativa", "loja-ativa-lista", true));
+        storeRepository.save(criarLoja("Loja Inativa", "loja-inativa-lista", false));
 
         var result = storeRepository.findByActiveTrue();
 
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).getSlug()).isEqualTo("ativa");
+        assertThat(result.get(0).getSlug()).isEqualTo("loja-ativa-lista");
     }
 
     @Test
     @DisplayName("Deve verificar se existe loja pelo slug")
     void deveVerificarSeExisteLojaPorSlug() {
-        storeRepository.save(criarLoja("Loja Teste", "loja-teste", true));
+        storeRepository.save(criarLoja("Loja Teste", "loja-existe", true));
 
-        boolean exists = storeRepository.existsBySlug("loja-teste");
+        boolean exists = storeRepository.existsBySlug("loja-existe");
 
         assertThat(exists).isTrue();
     }
@@ -77,26 +78,23 @@ class StoreRepositoryTest {
     @Test
     @DisplayName("Deve verificar se existe slug em outra loja")
     void deveVerificarSeExisteSlugEmOutraLoja() {
-        Store store1 = storeRepository.save(criarLoja("Loja 1", "minha-loja", true));
-        Store store2 = storeRepository.save(criarLoja("Loja 2", "outra-loja", true));
+        Store store1 = storeRepository.save(criarLoja("Loja 1", "slug-repetido", true));
+        Store store2 = storeRepository.save(criarLoja("Loja 2", "slug-diferente", true));
 
-        boolean exists = storeRepository.existsBySlugAndIdNot("minha-loja", store2.getId());
+        boolean exists = storeRepository.existsBySlugAndIdNot("slug-repetido", store2.getId());
 
         assertThat(exists).isTrue();
         assertThat(store1.getId()).isNotEqualTo(store2.getId());
     }
 
     private Store criarLoja(String name, String slug, boolean active) {
-        return Store.builder()
-                .name(name)
-                .slug(slug)
-                .active(active)
-                .primaryColor("#111111")
-                .secondaryColor("#ffffff")
-                .tertiaryColor("#f5f5f5")
-                .template("minimal")
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .build();
+        Store store = new Store();
+        store.setName(name);
+        store.setSlug(slug);
+        store.setTemplate(StoreTemplate.MINIMAL);
+        store.setActive(active);
+        store.setCreatedAt(LocalDateTime.now());
+        store.setUpdatedAt(LocalDateTime.now());
+        return store;
     }
 }
