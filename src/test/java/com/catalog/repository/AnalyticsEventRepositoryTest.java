@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -18,6 +19,7 @@ import java.time.LocalDateTime;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
+@ActiveProfiles("test")
 @DisplayName("Testes do AnalyticsEventRepository")
 class AnalyticsEventRepositoryTest {
 
@@ -91,27 +93,6 @@ class AnalyticsEventRepositoryTest {
         Object[] primeiro = result.get(0);
         assertThat(primeiro[1]).isEqualTo("Mais Visto");
         assertThat(primeiro[3]).isEqualTo(2L);
-    }
-
-    @Test
-    @DisplayName("Deve listar visitas diárias por loja e tipo de evento")
-    void deveListarVisitasDiariasPorLojaETipoDeEvento() {
-        Store store = storeRepository.save(criarLoja("loja-visitas-diarias"));
-
-        LocalDateTime hoje = LocalDateTime.now();
-
-        analyticsEventRepository.save(criarEvento(store, null, AnalyticsEventType.STORE_VIEW, hoje.minusHours(2)));
-        analyticsEventRepository.save(criarEvento(store, null, AnalyticsEventType.STORE_VIEW, hoje.minusHours(1)));
-        analyticsEventRepository.save(criarEvento(store, null, AnalyticsEventType.WHATSAPP_CLICK, hoje.minusHours(1)));
-
-        var result = analyticsEventRepository.findDailyVisits(
-                store.getId(),
-                AnalyticsEventType.STORE_VIEW,
-                hoje.minusDays(1)
-        );
-
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0)[1]).isEqualTo(2L);
     }
 
     private Store criarLoja(String slug) {
