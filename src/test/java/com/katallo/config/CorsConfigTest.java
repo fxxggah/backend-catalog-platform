@@ -10,7 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class CorsConfigTest {
 
     @Test
-    @DisplayName("Deve configurar CORS para o frontend local")
+    @DisplayName("Deve configurar CORS para o frontend")
     void deveConfigurarCorsParaOFrontendLocal() {
         CorsConfig corsConfig = new CorsConfig();
 
