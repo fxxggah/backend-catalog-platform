@@ -1,0 +1,42 @@
+package com.katallo.controller.viewer;
+
+import com.katallo.dto.category.CategoryResponse;
+import com.katallo.dto.common.PagedResponse;
+import com.katallo.dto.product.ProductResponse;
+import com.katallo.service.CategoryService;
+import com.katallo.service.ProductService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/v1/stores/{storeSlug}/categories")
+@RequiredArgsConstructor
+public class PublicCategoryController {
+
+    private final CategoryService categoryService;
+    private final ProductService productService;
+
+    @GetMapping
+    public ResponseEntity<List<CategoryResponse>> listCategories(
+            @PathVariable String storeSlug) {
+
+        return ResponseEntity.ok(categoryService.listPublicByStore(storeSlug));
+    }
+
+    @GetMapping("/{categorySlug}/products")
+    public ResponseEntity<PagedResponse<ProductResponse>> listProductsByCategory(
+            @PathVariable String storeSlug,
+            @PathVariable String categorySlug,
+            Pageable pageable) {
+
+        return ResponseEntity.ok(
+                PagedResponse.from(
+                        productService.listByCategory(storeSlug, categorySlug, pageable)
+                )
+        );
+    }
+}
